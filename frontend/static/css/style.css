@@ -508,6 +508,8 @@ a:hover {
     font-size: 1rem;
     line-height: 1.6;
     background: rgba(15, 23, 42, 0.25) !important;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
 }
 
 /* Console học sinh */
