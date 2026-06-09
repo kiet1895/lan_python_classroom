@@ -552,6 +552,8 @@ a:hover {
     overflow-y: auto;
     color: #38bdf8;
     white-space: pre-wrap;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
 }
 
 .console-placeholder {
@@ -994,6 +996,8 @@ a:hover {
     overflow-y: auto;
     color: #34d399;
     white-space: pre-wrap;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
 }
 
 .card-console-body.error {
