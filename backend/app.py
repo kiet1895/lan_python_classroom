@@ -251,4 +251,5 @@ if __name__ == '__main__':
     # Chạy server ở host 0.0.0.0 để các máy trong mạng LAN có thể kết nối
     # Sử dụng cổng 5001 mặc định để tránh xung đột với cổng 5000 (AirPlay Receiver trên macOS)
     port = int(os.environ.get('PORT', 5001))
-    socketio.run(app, host='0.0.0.0', port=port, debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    socketio.run(app, host='0.0.0.0', port=port, debug=debug_mode)

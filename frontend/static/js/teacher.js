@@ -663,6 +663,95 @@ function renderStudentSlot(ip, student) {
         tabsHtml += '</div>';
     }
 
+    const isAlreadyRendered = !slotCard.classList.contains("empty-slot") && studentEditors[ip];
+    if (isAlreadyRendered) {
+        // Cập nhật lớp hiển thị của thẻ
+        slotCard.className = `student-card glass-panel ${student.status === 'offline' ? 'card-offline' : ''} ${student.hand_raised ? 'card-hand-raised' : ''} ${examModeGlobal ? 'exam-hidden' : ''}`;
+        
+        // Cập nhật trạng thái chấm tròn online/offline
+        const dot = document.getElementById(`card-dot-${safeIp}`);
+        if (dot) {
+            dot.className = `status-dot ${student.status === 'online' ? 'green' : 'red'}`;
+        }
+        
+        // Cập nhật tên học sinh
+        const nameSpan = slotCard.querySelector(".card-student-name");
+        if (nameSpan) {
+            nameSpan.textContent = student.name;
+            nameSpan.title = student.name;
+        }
+        
+        // Cập nhật số lỗi rời tab
+        const faultBadge = document.getElementById(`card-fault-${safeIp}`);
+        if (faultBadge) {
+            faultBadge.textContent = `Lỗi rời tab: ${student.faults}`;
+            if (student.faults > 0) {
+                faultBadge.className = "card-fault-indicator warning-high";
+            } else {
+                faultBadge.className = "card-fault-indicator";
+            }
+        }
+        
+        // Cập nhật biểu tượng giơ tay
+        const hand = document.getElementById(`card-hand-${safeIp}`);
+        if (hand) {
+            if (student.hand_raised) {
+                hand.classList.remove("d-none");
+            } else {
+                hand.classList.add("d-none");
+            }
+        }
+        
+        // Cập nhật các tab mini của học sinh
+        const tabsContainer = slotCard.querySelector(".card-student-tabs");
+        if (tabsContainer) {
+            if (tabsHtml) {
+                tabsContainer.outerHTML = tabsHtml;
+            } else {
+                tabsContainer.remove();
+            }
+        } else if (tabsHtml) {
+            const header = slotCard.querySelector(".card-header");
+            if (header) {
+                header.insertAdjacentHTML('afterend', tabsHtml);
+            }
+        }
+        
+        // Cập nhật giá trị CodeMirror
+        const viewedTab = (student.tabs || []).find(t => t.id === activeViewedTabId);
+        const currentCode = viewedTab ? viewedTab.code : (student.code || "");
+        const cm = studentEditors[ip];
+        if (cm && cm.getValue() !== currentCode) {
+            const isTeacherEditing = cm.hasFocus() && (Date.now() - (lastTeacherEditTimes[ip] || 0) < 3000);
+            if (!isTeacherEditing) {
+                cm.setValue(currentCode);
+            }
+        }
+        
+        // Cập nhật giá trị Stdin input
+        const stdinInput = document.getElementById(`card-stdin-${safeIp}`);
+        if (stdinInput) {
+            const isTeacherEditing = (document.activeElement === stdinInput) && (Date.now() - (lastTeacherStdinEditTimes[ip] || 0) < 3000);
+            if (!isTeacherEditing) {
+                stdinInput.value = student.stdin || "";
+            }
+        }
+        
+        // Cập nhật nút chia sẻ bài
+        const btnShare = document.getElementById(`btn-share-${safeIp}`);
+        if (btnShare) {
+            if (student.is_sharing) {
+                btnShare.className = "btn btn-warning btn-sm";
+                btnShare.innerHTML = '<i class="fa-solid fa-square-share-nodes"></i> Đang chia sẻ';
+            } else {
+                btnShare.className = "btn btn-secondary btn-sm";
+                btnShare.innerHTML = '<i class="fa-solid fa-share-nodes"></i> Chia sẻ bài';
+            }
+        }
+        
+        return;
+    }
+
     // Render markup đầy đủ
     slotCard.innerHTML = `
         <div class="card-header">
