@@ -27,7 +27,6 @@ def is_safe_code(code_string):
         (r'\beval\s*\(', "Hàm thực thi 'eval()' bị cấm."),
         (r'\bexec\s*\(', "Hàm thực thi 'exec()' bị cấm."),
         (r'\b__import__\s*\(', "Hàm import động '__import__()' bị cấm."),
-        (r'\binput\s*\(', "Hàm 'input()' bị cấm vì có thể gây treo hệ thống trong môi trường LAN."),
         (r'\bgetattr\s*\(', "Hàm 'getattr()' bị cấm để tránh bypass bảo mật."),
         (r'\bsetattr\s*\(', "Hàm 'setattr()' bị cấm để tránh bypass bảo mật.")
     ]
@@ -43,7 +42,7 @@ def is_safe_code(code_string):
         
     return True, ""
 
-def execute_python_code(code_string):
+def execute_python_code(code_string, stdin=""):
     """
     Thực thi mã nguồn Python trong môi trường Sandbox độc lập.
     Đầu ra giới hạn ký tự, cấu hình timeout để tránh treo hệ thống.
@@ -72,6 +71,7 @@ def execute_python_code(code_string):
         # Khởi chạy tiến trình python phụ để chạy file code
         result = subprocess.run(
             [sys.executable, temp_file_path],
+            input=stdin,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,

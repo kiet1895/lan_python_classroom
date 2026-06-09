@@ -53,6 +53,7 @@ def register_socket_handlers(socketio):
                 'tabs': student.get('tabs', []),
                 'active_tab_id': student.get('active_tab_id', 'tab_default'),
                 'code': student['code'],
+                'stdin': student.get('stdin', ''),
                 'faults': student['faults'],
                 'hand_raised': student['hand_raised'],
                 'slot_id': student['slot_id'],
@@ -230,8 +231,10 @@ def register_socket_handlers(socketio):
                     if t['id'] == tab_id:
                         code_to_run = t['code']
                         break
+                # Lấy dữ liệu đầu vào (stdin)
+                stdin = student.get('stdin', '')
                 # Gọi sandbox chạy code
-                result = execute_python_code(code_to_run)
+                result = execute_python_code(code_to_run, stdin=stdin)
                 
                 # Trả kết quả chạy về cho giáo viên
                 emit('run_result', {
@@ -280,8 +283,15 @@ def register_socket_handlers(socketio):
             return
             
         if student:
+            active_tab_id = student.get('active_tab_id', 'tab_default')
             code_to_run = student['code']
-            result = execute_python_code(code_to_run)
+            for t in student.get('tabs', []):
+                if t['id'] == active_tab_id:
+                    code_to_run = t['code']
+                    break
+            # Lấy dữ liệu đầu vào (stdin)
+            stdin = student.get('stdin', '')
+            result = execute_python_code(code_to_run, stdin=stdin)
             
             # Trả kết quả về cho học sinh tự xem
             emit('student_run_result', {
@@ -316,6 +326,26 @@ def register_socket_handlers(socketio):
             student = db.get_student_by_ip(target_ip)
             if target_ip in db.shared_ips and student and student.get("active_tab_id") == tab_id:
                 emit('shared_code_sync', {'ip': target_ip, 'code': code}, room='students')
+
+    @socketio.on('stdin_sync')
+    def handle_stdin_sync(data):
+        """Học sinh đồng bộ dữ liệu đầu vào (stdin)."""
+        ip = get_client_ip()
+        stdin = data.get('stdin', '')
+        if db.update_student_stdin(ip, stdin):
+            # Đồng bộ sang máy giáo viên
+            emit('student_stdin_sync', {'ip': ip, 'stdin': stdin}, room='teachers')
+
+    @socketio.on('teacher_edit_stdin')
+    def handle_teacher_edit_stdin(data):
+        """Giáo viên sửa trực tiếp dữ liệu đầu vào (stdin) của học sinh từ xa."""
+        target_ip = data.get('target_ip')
+        stdin = data.get('stdin', '')
+        if db.update_student_stdin(target_ip, stdin):
+            # Đồng bộ về máy học sinh
+            emit('teacher_stdin_sync', {'stdin': stdin}, room=f"student_{target_ip}")
+            # Đồng bộ sang các máy giáo viên khác (nếu có) để giao diện đồng nhất
+            emit('student_stdin_sync', {'ip': target_ip, 'stdin': stdin}, room='teachers', include_self=False)
 
     # --------------------------------------------------------------------------
     # CÁC SỰ KIỆN TƯƠNG TÁC TẬP TIN / TAB CỦA HỌC SINH

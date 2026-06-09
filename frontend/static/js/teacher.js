@@ -7,6 +7,8 @@ let students = {}; // Map lưu học sinh theo IP: { ip: student_data }
 let studentEditors = {}; // Map lưu CodeMirror instance của học sinh: { ip: cm_instance }
 let templateEditor = null; // CodeMirror cho phần soạn code mẫu
 let lastTeacherEditTimes = {}; // ip -> timestamp (thời gian giáo viên gõ phím cuối cùng để tránh lỗi đè)
+let lastTeacherStdinEditTimes = {}; // ip -> timestamp (tránh ghi đè khi giáo viên đang nhập liệu stdin)
+let teacherStdinSyncTimeouts = {}; // ip -> timeout
 
 let isFrozenGlobal = false;
 let examModeGlobal = false;
@@ -190,6 +192,23 @@ function initSocketEvents() {
                         console.warn("Lỗi khôi phục scroll:", e);
                     }
                 }
+            }
+        }
+    });
+
+    // Nhận dữ liệu đầu vào (stdin) của học sinh được đồng bộ từ client
+    socket.on("student_stdin_sync", (data) => {
+        const ip = data.ip;
+        const stdin = data.stdin;
+        if (students[ip]) {
+            students[ip].stdin = stdin;
+        }
+        const safeIp = ip.replace(/\./g, '-');
+        const stdinInput = document.getElementById(`card-stdin-${safeIp}`);
+        if (stdinInput) {
+            const isTeacherEditing = (document.activeElement === stdinInput) && (Date.now() - (lastTeacherStdinEditTimes[ip] || 0) < 3000);
+            if (!isTeacherEditing) {
+                stdinInput.value = stdin || "";
             }
         }
     });
@@ -671,6 +690,12 @@ function renderStudentSlot(ip, student) {
                     <span>Console</span>
                     <span class="card-console-status" style="font-weight: 700;"></span>
                 </div>
+                <div class="card-console-stdin">
+                    <span class="card-console-stdin-label">
+                        <i class="fa-solid fa-keyboard"></i> Input:
+                    </span>
+                    <textarea id="card-stdin-${safeIp}" class="card-console-stdin-textarea" placeholder="Ví dụ:&#10;Kiet&#10;18" oninput="syncTeacherEditedStdin('${ip}')">${student.stdin || ""}</textarea>
+                </div>
                 <div class="card-console-body card-console-placeholder" id="card-console-body-${safeIp}">Chờ chạy thử...</div>
             </div>
         </div>
@@ -992,3 +1017,26 @@ function removeVietnameseTones(str) {
     str = str.replace(/\u02C6|\u0306|\u031B/g, ""); 
     return str;
 }
+
+/* Đồng bộ dữ liệu đầu vào (stdin) do giáo viên sửa từ xa */
+window.syncTeacherEditedStdin = function(ip) {
+    const safeIp = ip.replace(/\./g, '-');
+    const stdinInput = document.getElementById(`card-stdin-${safeIp}`);
+    if (!stdinInput) return;
+    
+    // Ghi lại thời điểm GV gõ phím để chặn overwrite từ client
+    lastTeacherStdinEditTimes[ip] = Date.now();
+    
+    // Đồng bộ về máy học sinh với cơ chế debounce
+    clearTimeout(teacherStdinSyncTimeouts[ip]);
+    teacherStdinSyncTimeouts[ip] = setTimeout(() => {
+        const stdin = stdinInput.value;
+        if (students[ip]) {
+            students[ip].stdin = stdin;
+        }
+        socket.emit("teacher_edit_stdin", {
+            target_ip: ip,
+            stdin: stdin
+        });
+    }, 400); // Debounce 400ms
+};

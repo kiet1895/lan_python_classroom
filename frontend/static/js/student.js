@@ -91,6 +91,11 @@ function initSocketEvents() {
         const activeTab = studentTabs.find(t => t.id === activeTabId);
         currentCode = activeTab ? activeTab.code : (student.code || "");
         
+        const stdinInput = document.getElementById("student-stdin-input");
+        if (stdinInput) {
+            stdinInput.value = student.stdin || "";
+        }
+        
         initWorkspace();
         renderTabs();
     });
@@ -134,6 +139,11 @@ function initSocketEvents() {
         currentCode = activeTab ? activeTab.code : (data.code || "");
         isFrozen = data.is_frozen;
         
+        const stdinInput = document.getElementById("student-stdin-input");
+        if (stdinInput) {
+            stdinInput.value = data.stdin || "";
+        }
+        
         initWorkspace();
         if (editor) {
             editor.setValue(currentCode);
@@ -172,6 +182,14 @@ function initSocketEvents() {
             editor.setValue(data.code);
         } else {
             currentCode = data.code;
+        }
+    });
+
+    // Nhận dữ liệu đầu vào (stdin) được giáo viên cập nhật từ xa
+    socket.on("teacher_stdin_sync", (data) => {
+        const stdinInput = document.getElementById("student-stdin-input");
+        if (stdinInput) {
+            stdinInput.value = data.stdin || "";
         }
     });
 
@@ -382,7 +400,7 @@ function initUIEvents() {
             const consoleOutput = document.getElementById("console-output");
             consoleOutput.innerHTML = '<span class="console-placeholder"><i class="fa-solid fa-spinner fa-spin"></i> Đang thực thi mã nguồn trên hệ thống sandbox...</span>';
             
-            // Đồng bộ code tức thời trước khi chạy thử
+            // Đồng bộ code & dữ liệu đầu vào tức thời trước khi chạy thử
             if (editor) {
                 const code = editor.getValue();
                 const activeTab = studentTabs.find(t => t.id === activeTabId);
@@ -390,6 +408,10 @@ function initUIEvents() {
                     activeTab.code = code;
                 }
                 socket.emit("code_sync", { tab_id: activeTabId, code: code });
+            }
+            const stdinInput = document.getElementById("student-stdin-input");
+            if (stdinInput) {
+                socket.emit("stdin_sync", { stdin: stdinInput.value });
             }
             
             socket.emit("student_run_own_code");
@@ -402,6 +424,20 @@ function initUIEvents() {
         btnClearConsole.addEventListener("click", () => {
             const consoleOutput = document.getElementById("console-output");
             consoleOutput.innerHTML = '<span class="console-placeholder">Chờ chạy chương trình... kết quả in ra sẽ xuất hiện ở đây.</span>';
+        });
+    }
+
+    // Đồng bộ dữ liệu đầu vào (stdin) khi nhập liệu
+    const stdinInput = document.getElementById("student-stdin-input");
+    if (stdinInput) {
+        let syncStdinTimeout;
+        stdinInput.addEventListener("input", () => {
+            if (isFrozen) return;
+            clearTimeout(syncStdinTimeout);
+            syncStdinTimeout = setTimeout(() => {
+                const stdin = stdinInput.value;
+                socket.emit("stdin_sync", { stdin: stdin });
+            }, 400); // Debounce 400ms
         });
     }
 

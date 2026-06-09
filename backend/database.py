@@ -105,7 +105,6 @@ class Database:
             if available_slot is None:
                 return None
             
-            # 6. Khởi tạo học sinh mới trong slot trống
             self.students[ip] = {
                 "name": name,
                 "tabs": [
@@ -113,6 +112,7 @@ class Database:
                 ],
                 "active_tab_id": "tab_default",
                 "code": self.code_template,  # Kế thừa code mẫu hiện tại (nếu có)
+                "stdin": "",
                 "faults": 0,
                 "status": "online",
                 "hand_raised": False,
@@ -132,6 +132,8 @@ class Database:
                     ]
                 if "active_tab_id" not in student:
                     student["active_tab_id"] = "tab_default"
+                if "stdin" not in student:
+                    student["stdin"] = ""
             return student
 
     def update_code(self, ip, code):
@@ -182,6 +184,8 @@ class Database:
                     ]
                 if "active_tab_id" not in student:
                     student["active_tab_id"] = "tab_default"
+                if "stdin" not in student:
+                    student["stdin"] = ""
             return dict(self.students)
 
     def reset_faults(self, ip):
@@ -269,6 +273,14 @@ class Database:
                         if self.students[ip]["active_tab_id"] == tab_id:
                             self.students[ip]["code"] = code
                         return True
+            return False
+
+    def update_student_stdin(self, ip, stdin):
+        """Cập nhật dữ liệu đầu vào (stdin) của học sinh."""
+        with self.lock:
+            if ip in self.students:
+                self.students[ip]["stdin"] = stdin
+                return True
             return False
 
     # --------------------------------------------------------------------------

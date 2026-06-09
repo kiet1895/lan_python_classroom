@@ -516,7 +516,7 @@ a:hover {
 .console-container {
     display: flex;
     flex-direction: column;
-    height: 180px;
+    height: 230px;
     overflow: hidden;
 }
 
@@ -844,7 +844,7 @@ a:hover {
 .student-card {
     display: flex;
     flex-direction: column;
-    height: 380px;
+    height: 420px;
     overflow: hidden;
     transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
@@ -920,7 +920,7 @@ a:hover {
 .card-body {
     flex: 1;
     display: grid;
-    grid-template-rows: 1fr 100px;
+    grid-template-rows: 1fr 140px;
     position: relative;
     overflow: hidden;
 }
@@ -930,8 +930,8 @@ a:hover {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 100px;
-    height: calc(100% - 100px) !important;
+    bottom: 140px;
+    height: calc(100% - 140px) !important;
     font-size: 0.85rem;
 }
 
@@ -969,7 +969,7 @@ a:hover {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 100px;
+    height: 140px;
     background: #020617;
     border-top: 1px solid var(--border-color);
     display: flex;
@@ -1007,6 +1007,38 @@ a:hover {
 .card-console-placeholder {
     color: #3b4252;
     font-style: italic;
+}
+
+.card-console-stdin {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 12px;
+    background: rgba(3, 7, 18, 0.25);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    gap: 4px;
+}
+
+.card-console-stdin-label {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-code);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.card-console-stdin-textarea {
+    width: 100%;
+    height: 32px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-family: var(--font-code);
+    font-size: 0.76rem;
+    color: var(--color-text-main);
+    outline: none;
+    resize: none;
 }
 
 /* Footer điều khiển ô học sinh */
