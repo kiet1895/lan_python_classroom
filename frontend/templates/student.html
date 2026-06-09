@@ -108,7 +108,18 @@
                         </div>
                     </div>
                     <div class="editor-body">
-                        <textarea id="student-code-editor">{{ student.code if student else '' }}</textarea>
+                        <div class="editor-wrapper">
+                            <textarea id="student-code-editor">{{ student.code if student else '' }}</textarea>
+                        </div>
+                        <div class="editor-stdin-pane">
+                            <div class="stdin-pane-header">
+                                <i class="fa-solid fa-keyboard"></i> Dữ liệu đầu vào (Input):
+                            </div>
+                            <div class="stdin-pane-desc">
+                                Nhập các dữ liệu cho hàm <code>input()</code> của chương trình, mỗi dòng tương ứng với một lần nhập (phím Enter).
+                            </div>
+                            <textarea id="student-stdin-input" placeholder="Ví dụ:&#10;Kiet&#10;18" class="student-stdin-textarea"></textarea>
+                        </div>
                     </div>
                 </div>
                 
@@ -117,12 +128,6 @@
                     <div class="console-header">
                         <span><i class="fa-solid fa-terminal"></i> Bảng kết quả chạy code</span>
                         <button class="btn-clear-console" id="btn-clear-console" title="Xóa bảng kết quả"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
-                    <div class="console-stdin-bar" style="display: flex; flex-direction: column; padding: 8px 18px; background: rgba(3, 7, 18, 0.25); border-bottom: 1px solid rgba(255,255,255,0.03); gap: 4px;">
-                        <span style="font-size: 0.78rem; color: var(--color-text-muted); font-family: var(--font-code); display: flex; align-items: center; gap: 6px;">
-                            <i class="fa-solid fa-keyboard"></i> Dữ liệu đầu vào (Input) cho hàm input():
-                        </span>
-                        <textarea id="student-stdin-input" placeholder="Ví dụ:&#10;Kiet&#10;18" style="width: 100%; height: 65px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 4px; padding: 6px 10px; font-family: var(--font-code); font-size: 0.82rem; color: var(--color-text-main); outline: none; resize: vertical; min-height: 45px; max-height: 120px;"></textarea>
                     </div>
                     <div class="console-body" id="console-output">
                         <span class="console-placeholder">Chờ giáo viên chạy chương trình của bạn... kết quả in ra sẽ xuất hiện ở đây.</span>
@@ -232,6 +237,6 @@
     window.CLASS_FROZEN = {% if is_frozen %}true{% else %}false{% endif %};
 </script>
 <!-- Tải JavaScript xử lý logic của Học sinh -->
-<script src="{{ url_for('static', filename='js/student.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='js/student.js') }}?v=6"></script>
 {% endif %}
 {% endblock %}
