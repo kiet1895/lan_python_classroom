@@ -516,7 +516,7 @@ a:hover {
 .console-container {
     display: flex;
     flex-direction: column;
-    height: 230px;
+    height: 250px;
     overflow: hidden;
 }
 

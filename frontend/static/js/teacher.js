@@ -176,20 +176,22 @@ function initSocketEvents() {
                     
                     editor.setValue(code);
                     
-                    try {
-                        const lineCount = editor.lineCount();
-                        let line = Math.max(0, Math.min(cursor.line, lineCount - 1));
-                        const lineLength = (editor.getLine(line) || "").length;
-                        let ch = Math.max(0, Math.min(cursor.ch, lineLength));
-                        editor.setCursor({ line: line, ch: ch });
-                    } catch (e) {
-                        console.warn("Lỗi khôi phục con trỏ:", e);
-                    }
-                    
-                    try {
-                        editor.scrollTo(scrollInfo.left, scrollInfo.top);
-                    } catch (e) {
-                        console.warn("Lỗi khôi phục scroll:", e);
+                    if (editor.hasFocus()) {
+                        try {
+                            const lineCount = editor.lineCount();
+                            let line = Math.max(0, Math.min(cursor.line, lineCount - 1));
+                            const lineLength = (editor.getLine(line) || "").length;
+                            let ch = Math.max(0, Math.min(cursor.ch, lineLength));
+                            editor.setCursor({ line: line, ch: ch }, { scroll: false });
+                        } catch (e) {
+                            console.warn("Lỗi khôi phục con trỏ:", e);
+                        }
+                        
+                        try {
+                            editor.scrollTo(scrollInfo.left, scrollInfo.top);
+                        } catch (e) {
+                            console.warn("Lỗi khôi phục scroll:", e);
+                        }
                     }
                 }
             }
