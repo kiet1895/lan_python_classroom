@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Phòng Lập Trình Python LAN - Học Sinh{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    
+    <!-- TRƯỜNG HỢP 1: Lớp học chưa được giáo viên thiết lập sĩ số -->
+    {% if no_session %}
+    <div class="no-session-container">
+        <div class="status-card glass-panel">
+            <div class="status-icon pulse-yellow">
+                <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <h2>Lớp Học Chưa Sẵn Sàng</h2>
+            <p>Giáo viên chưa khởi tạo sĩ số lớp học cho buổi học hôm nay.</p>
+            <p class="sub-text">Vui lòng đợi trong giây lát hoặc liên hệ với giáo viên để bắt đầu...</p>
+        </div>
+    </div>
+    
+    {% else %}
+    
+    <!-- TRƯỜNG HỢP 2: Lớp học đã được tạo -->
+    
+    <!-- 2.1 Form đăng nhập (Chỉ hiển thị khi chưa xác định được học sinh qua IP) -->
+    <div class="login-section {% if student %}d-none{% endif %}" id="student-login-section">
+        <div class="login-card glass-panel">
+            <div class="login-header">
+                <div class="logo-icon">
+                    <i class="fa-brands fa-python"></i>
+                </div>
+                <h2>ĐĂNG NHẬP LỚP HỌC</h2>
+                <p>Nhập họ và tên để kết nối vào phòng học lập trình LAN</p>
+            </div>
+            
+            <form id="student-login-form" class="login-form" onsubmit="event.preventDefault();">
+                <div class="error-banner d-none" id="login-error-banner">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="login-error-text">Tên học sinh không hợp lệ</span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="student-name-input"><i class="fa-solid fa-user"></i> Họ và tên của bạn</label>
+                    <input type="text" id="student-name-input" placeholder="Ví dụ: Nguyễn Văn A" required minlength="2" maxlength="30" autocomplete="off">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block" id="btn-student-login">
+                    <span>Vào phòng học</span> <i class="fa-solid fa-right-to-bracket"></i>
+                </button>
+            </form>
+            <div class="author-credits" style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: var(--color-text-muted); opacity: 0.7;">
+                Tác giả phần mềm: <strong>Kiet1895_NGT</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2.2 Không gian làm việc (Workspace - Mặc định ẩn, hiện khi đã login hoặc có session) -->
+    <div class="workspace-section {% if not student %}d-none{% endif %}" id="student-workspace-section">
+        <!-- Thanh công cụ học sinh (Student Toolbar) -->
+        <header class="student-toolbar glass-panel">
+            <div class="toolbar-left">
+                <div class="student-avatar">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="student-meta">
+                    <h3 id="student-display-name">{{ student.name if student else 'Học sinh' }}</h3>
+                    <span class="badge badge-indigo" id="student-slot-badge">Ô số: {{ student.slot_id if student else '0' }}</span>
+                </div>
+                <span class="author-tag" style="font-size: 0.75rem; color: var(--color-text-muted); opacity: 0.6; font-weight: normal; margin-left: 12px; border-left: 1px solid var(--border-color); padding-left: 12px; align-self: center;" title="Tác giả phần mềm">Kiet1895_NGT</span>
+            </div>
+            
+            <div class="toolbar-center">
+                <!-- Nút Giơ Tay trợ giúp -->
+                <button class="btn btn-warning {% if student and student.hand_raised %}hand-raised{% endif %}" id="btn-raise-hand" title="Giơ tay nhờ giáo viên trợ giúp">
+                    <i class="fa-solid fa-hand"></i> <span>Giơ Tay Trợ Giúp</span>
+                </button>
+                
+                <!-- Nút Bật/Tắt đề bài bên phải -->
+                <button class="btn btn-indigo" id="btn-toggle-assignment-pane" title="Xem đề bài của buổi học" style="margin-left: 10px;">
+                    <i class="fa-solid fa-file-lines"></i> <span>Xem Đề Bài</span>
+                </button>
+            </div>
+            
+            <div class="toolbar-right">
+                <div class="status-indicator">
+                    <div class="status-dot green" id="status-dot"></div>
+                    <span id="status-text">Đang kết nối</span>
+                </div>
+                <div class="fault-badge" id="fault-badge-container">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Số lỗi rời tab: <strong id="student-faults-count">{{ student.faults if student else '0' }}</strong></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Trình soạn thảo mã nguồn và Bảng in kết quả -->
+        <main class="workspace-main" id="student-workspace-main">
+            <div class="workspace-left">
+                <div class="editor-container glass-panel">
+                    <div class="editor-tabs-container">
+                        <div class="editor-tabs-bar" id="editor-tabs-bar">
+                            <!-- Các tab sẽ sinh động bằng JS -->
+                        </div>
+                        <div class="editor-actions">
+                            <button class="btn btn-success btn-sm" id="btn-student-run" title="Chạy chương trình của bạn">
+                                <i class="fa-solid fa-play"></i> Tự Chạy Code
+                            </button>
+                        </div>
+                    </div>
+                    <div class="editor-body">
+                        <textarea id="student-code-editor">{{ student.code if student else '' }}</textarea>
+                    </div>
+                </div>
+                
+                <!-- Terminal console hiển thị kết quả chạy code từ xa -->
+                <div class="console-container glass-panel" id="student-console">
+                    <div class="console-header">
+                        <span><i class="fa-solid fa-terminal"></i> Bảng kết quả chạy code</span>
+                        <button class="btn-clear-console" id="btn-clear-console" title="Xóa bảng kết quả"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div class="console-body" id="console-output">
+                        <span class="console-placeholder">Chờ giáo viên chạy chương trình của bạn... kết quả in ra sẽ xuất hiện ở đây.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thanh kéo giãn chia màn hình -->
+            <div class="workspace-resizer d-none" id="workspace-resizer"></div>
+
+            <!-- Khung hiển thị Đề bài và Bài làm được chia sẻ -->
+            <div class="workspace-right glass-panel d-none" id="right-pane">
+                <div class="right-pane-header-tabs">
+                    <button class="pane-tab active" id="pane-tab-assignment" title="Xem đề bài của giáo viên">
+                        <i class="fa-solid fa-file-lines"></i> Đề Bài
+                    </button>
+                    <button class="pane-tab" id="pane-tab-shared" title="Xem bài làm của các bạn đang được chia sẻ">
+                        <i class="fa-solid fa-square-share-nodes"></i> Bài Chia Sẻ
+                        <span class="badge badge-red d-none" id="shared-noti-dot"></span>
+                    </button>
+                </div>
+                
+                <div class="right-pane-body">
+                    <!-- Nội dung đề bài -->
+                    <div class="pane-content" id="pane-content-assignment">
+                        <div class="assignment-toolbar">
+                            <a href="/assignment/view" target="_blank" class="btn btn-indigo-outline btn-sm" id="btn-pop-assignment">
+                                <i class="fa-solid fa-up-right-from-square"></i> Mở trong tab mới
+                            </a>
+                        </div>
+                        <div class="assignment-viewport" id="assignment-viewport">
+                            <div class="no-assignment">Chưa có đề bài từ Giáo viên.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Nội dung bài viết được chia sẻ -->
+                    <div class="pane-content d-none" id="pane-content-shared">
+                        <div class="shared-panel-body" id="shared-editors-container">
+                            <!-- Được JS sinh động các editor CodeMirror của bạn bè ra đây -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Màn hình khóa Fullscreen Overlay (Khóa màn hình học sinh) -->
+    <div class="freeze-overlay {% if not is_frozen %}d-none{% endif %}" id="freeze-overlay">
+        <div class="freeze-card glass-panel text-center">
+            <div class="freeze-icon animate-bounce">
+                <i class="fa-solid fa-chalkboard-user"></i>
+            </div>
+            <h2>VUI LÒNG NHÌN LÊN BẢNG</h2>
+            <p>Màn hình của bạn đã tạm thời bị khóa theo yêu cầu của Giáo viên.</p>
+            <div class="freeze-spinner">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Hãy lắng nghe giảng bài...
+            </div>
+        </div>
+    </div>
+
+    <!-- Màn hình cảnh báo mất tập trung (rời tab) -->
+    <div class="modal-overlay d-none" id="blur-warning-overlay" style="z-index: 99998;">
+        <div class="modal-card glass-panel text-center" style="border-color: rgba(239, 68, 68, 0.3); box-shadow: 0 0 40px rgba(239, 68, 68, 0.25);">
+            <div class="freeze-icon animate-bounce">
+                <i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i>
+            </div>
+            <h2 style="color: var(--danger); font-weight: 800;">CẢNH BÁO MẤT TẬP TRUNG</h2>
+            <p>Hệ thống ghi nhận bạn đã rời khỏi trang làm bài hoặc chuyển sang tab khác.</p>
+            <div class="fault-badge" style="margin: 0 auto 20px auto; width: fit-content; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 16px; border-radius: 8px; font-weight: 700; color: #f87171;">
+                <span>Số lỗi vi phạm: <strong id="warning-violations-count">0</strong></span>
+            </div>
+            <button class="btn btn-warning" id="btn-resume-work">Quay lại làm bài</button>
+        </div>
+    </div>
+
+    <!-- Modal nhập liệu / xác nhận tuỳ chỉnh (Custom Input/Confirm Modal) -->
+    <div class="modal-overlay d-none" id="custom-dialog-modal" style="z-index: 99999;">
+        <div class="modal-card glass-panel" style="max-width: 400px; border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);">
+            <div class="modal-header" style="padding-bottom: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 0;">
+                <h2 id="custom-dialog-title" style="font-size: 1.25rem; font-weight: 700; color: var(--color-text-main); margin: 0;">Thông báo</h2>
+            </div>
+            <div class="modal-body" style="padding: 15px 0 0 0;">
+                <p id="custom-dialog-message" style="margin-bottom: 15px; color: var(--color-text-muted); font-size: 0.95rem; line-height: 1.5;"></p>
+                <div class="input-group" id="custom-dialog-input-container" style="display: none; margin-bottom: 15px;">
+                    <input type="text" id="custom-dialog-input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 6px; color: var(--color-text-main); outline: none; font-family: inherit; font-size: 0.95rem; transition: border-color 0.3s;" autocomplete="off">
+                </div>
+                <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                    <button class="btn btn-secondary" id="btn-custom-dialog-cancel" style="padding: 8px 16px; font-size: 0.9rem;">Hủy</button>
+                    <button class="btn btn-primary" id="btn-custom-dialog-ok" style="padding: 8px 16px; font-size: 0.9rem;">Đồng ý</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if not no_session %}
+<script id="assignment-desc-data" type="application/json">
+    {{ (assignment.description or "") | tojson | safe }}
+</script>
+<!-- Khởi tạo dữ liệu phục hồi từ Flask -->
+<script>
+    window.STUDENT_LOGGED_IN = {% if student %}true{% else %}false{% endif %};
+    window.CLASS_FROZEN = {% if is_frozen %}true{% else %}false{% endif %};
+</script>
+<!-- Tải JavaScript xử lý logic của Học sinh -->
+<script src="{{ url_for('static', filename='js/student.js') }}?v=3"></script>
+{% endif %}
+{% endblock %}

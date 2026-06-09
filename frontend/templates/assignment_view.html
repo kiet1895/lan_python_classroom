@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đề Bài Lớp Học - Phòng Lập Trình Python LAN</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
+    <style>
+        :root {
+            --bg-base: #030712;
+            --primary: #6366f1;
+            --color-text-main: #f3f4f6;
+            --color-text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --font-ui: 'Outfit', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(167, 139, 250, 0.06) 0%, transparent 40%);
+            color: var(--color-text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 30px;
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand i {
+            font-size: 1.4rem;
+            color: var(--primary);
+        }
+
+        .brand h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .status {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        main {
+            flex: 1;
+            overflow: hidden;
+            padding: 10px;
+            display: flex;
+            align-items: stretch;
+            justify-content: stretch;
+        }
+
+        .content-container {
+            width: 100%;
+            max-width: 100%;
+            height: calc(100vh - 100px);
+            background: rgba(17, 24, 39, 0.45);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .no-assignment {
+            text-align: center;
+            color: var(--color-text-muted);
+            font-size: 1.1rem;
+            margin: auto;
+        }
+
+        /* Styling cho đề bài dạng văn bản mô tả Markdown */
+        .assignment-description-view {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #e5e7eb;
+            margin-bottom: 20px;
+            word-break: break-word;
+        }
+        .assignment-description-view h1 { font-size: 1.6rem; margin: 15px 0 10px 0; color: #fff; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 5px; }
+        .assignment-description-view h2 { font-size: 1.35rem; margin: 12px 0 8px 0; color: #fff; }
+        .assignment-description-view h3 { font-size: 1.2rem; margin: 10px 0 6px 0; color: #fff; }
+        .assignment-description-view strong { color: var(--warning); font-weight: 700; }
+        .assignment-description-view ul { margin: 8px 0; padding-left: 20px; }
+        .assignment-description-view li { margin: 4px 0; }
+        .assignment-inline-image {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .assignment-inline-image:hover {
+            transform: scale(1.01);
+        }
+
+        /* Container tệp đính kèm */
+        .assignment-attachment-container {
+            margin-top: 15px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.15);
+            padding-top: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .assignment-attachment-label {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .assignment-attachment-label i {
+            color: var(--primary);
+        }
+
+        .assignment-image-view {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+            object-fit: contain;
+            margin: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+
+        .assignment-pdf-view {
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            flex: 1;
+            min-height: 90vh;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <h1>ĐỀ BÀI LỚP HỌC PYTHON</h1>
+        </div>
+        <div class="status">
+            <div class="status-dot"></div>
+            <span>Đồng bộ thời gian thực</span>
+        </div>
+    </header>
+
+    <main>
+        <script id="assignment-desc-data" type="application/json">
+            {{ (assignment.description or "") | tojson | safe }}
+        </script>
+        <div class="content-container" id="content-container">
+            <!-- Assignment content will be rendered here -->
+        </div>
+    </main>
+
+    <script>
+        const socket = io();
+        
+        socket.on("connect", () => {
+            console.log("Đã kết nối Socket.IO để nhận đề bài.");
+        });
+
+        socket.on("assignment_updated", (assignment) => {
+            renderAssignment(assignment);
+        });
+
+        // Nhận dữ liệu ban đầu từ Flask rendering
+        let initialDescription = "";
+        try {
+            initialDescription = JSON.parse(document.getElementById("assignment-desc-data").textContent);
+        } catch (e) {
+            console.error("Lỗi đọc dữ liệu mô tả ban đầu:", e);
+        }
+
+        const initialAssignment = {
+            type: "{{ assignment.type }}",
+            content: "{{ assignment.content | safe }}",
+            filename: "{{ assignment.filename }}",
+            description: initialDescription,
+            file_url: "{{ assignment.file_url }}",
+            file_type: "{{ assignment.file_type }}",
+            file_name: "{{ assignment.file_name }}"
+        };
+        renderAssignment(initialAssignment);
+
+        function renderAssignment(assignment) {
+            const container = document.getElementById("content-container");
+            if (!container) return;
+            
+            container.innerHTML = "";
+            
+            const hasDescription = assignment && assignment.description && assignment.description.trim() !== "";
+            const hasFile = assignment && assignment.file_url && assignment.file_url.trim() !== "" && assignment.file_type !== "none";
+            
+            if (!hasDescription && !hasFile) {
+                container.innerHTML = '<div class="no-assignment"><i class="fa-regular fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i> Chưa có đề bài từ Giáo viên.</div>';
+                return;
+            }
+            
+            // 1. Render mô tả Markdown
+            if (hasDescription) {
+                const descDiv = document.createElement("div");
+                descDiv.className = "assignment-description-view";
+                descDiv.innerHTML = parseMarkdown(assignment.description);
+                container.appendChild(descDiv);
+            }
+            
+            // 2. Render tệp đính kèm
+            if (hasFile) {
+                const attachContainer = document.createElement("div");
+                attachContainer.className = "assignment-attachment-container";
+                
+                const label = document.createElement("div");
+                label.className = "assignment-attachment-label";
+                label.innerHTML = `<i class="fa-solid fa-paperclip"></i> Tệp đính kèm: <strong>${assignment.file_name || "File"}</strong>`;
+                attachContainer.appendChild(label);
+                
+                if (assignment.file_type === "image") {
+                    const img = document.createElement("img");
+                    img.className = "assignment-image-view";
+                    img.src = assignment.file_url;
+                    img.alt = assignment.file_name || "Đề bài hình ảnh";
+                    img.onclick = () => window.open(assignment.file_url, "_blank");
+                    attachContainer.appendChild(img);
+                } else if (assignment.file_type === "pdf") {
+                    const iframe = document.createElement("iframe");
+                    iframe.className = "assignment-pdf-view";
+                    iframe.src = assignment.file_url;
+                    attachContainer.appendChild(iframe);
+                }
+                container.appendChild(attachContainer);
+            }
+        }
+
+        function parseMarkdown(text) {
+            if (!text) return "";
+            
+            let html = text;
+            
+            // Escape HTML
+            html = html
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+                
+            // Headers
+            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+            
+            // Bold
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Italic
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            
+            // Bullet points
+            html = html.replace(/^\- (.*$)/gim, '<ul><li>$1</li></ul>');
+            html = html.replace(/<\/ul>\s*<ul>/g, '');
+            
+            // Images: ![alt](url)
+            html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img class="assignment-inline-image" src="$2" alt="$1" onclick="window.open(\'$2\', \'_blank\')" />');
+            
+            // Links: [text](url)
+            html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+            
+            // Newlines to br
+            html = html.replace(/\n/g, '<br>');
+            
+            return html;
+        }
+
+        // Kênh thông tin chia sẻ trạng thái focus để không tính lỗi rời tab khi xem đề bài
+        const assignmentChannel = new BroadcastChannel('assignment_focus_channel');
+
+        function sendHeartbeat() {
+            if (document.hasFocus()) {
+                assignmentChannel.postMessage({ type: 'heartbeat', timestamp: Date.now() });
+            }
+        }
+
+        // Gửi heartbeat định kỳ mỗi 200ms khi trang có focus
+        setInterval(sendHeartbeat, 200);
+
+        // Gửi lập tức khi được focus hoặc khi trang vừa tải xong
+        window.addEventListener('focus', sendHeartbeat);
+        if (document.hasFocus()) {
+            sendHeartbeat();
+        }
+    </script>
+</body>
+</html>

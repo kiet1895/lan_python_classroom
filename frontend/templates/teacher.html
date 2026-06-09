@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Bảng Điều Khiển Giáo Viên - Phòng Lập Trình Python LAN{% endblock %}
+
+{% block content %}
+<div class="teacher-dashboard">
+    <!-- Thanh điều hướng đầu trang (Dashboard Header) -->
+    <header class="dashboard-header glass-panel">
+        <!-- Hàng Trên: Logo, Chỉ số và Hộp tìm kiếm -->
+        <div class="header-top-row">
+            <div class="header-top-left">
+                <div class="brand-logo" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <h1>PYTHON LAN</h1>
+                    <span class="author-tag" style="font-size: 0.75rem; color: var(--color-text-muted); opacity: 0.6; font-weight: normal; margin-left: 8px; border-left: 1px solid var(--border-color); padding-left: 8px;" title="Tác giả phần mềm">Kiet1895_NGT</span>
+                </div>
+                <div class="session-info">
+                    <span class="badge badge-indigo" id="capacity-badge">Sĩ số: {{ capacity if capacity > 0 else 'Chưa thiết lập' }}</span>
+                    <span class="badge badge-green" id="active-count-badge">Hoạt động: 0</span>
+                    {% if student_url %}
+                    <span class="badge badge-url" id="student-url-badge" title="Click để sao chép link truy cập của học sinh">
+                        <i class="fa-solid fa-link"></i> <span id="student-url-display">{{ student_url | replace('http://', '') }}</span>
+                        <span id="student-url-text" style="display: none;">{{ student_url }}</span>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="header-top-right">
+                <div class="search-box-container" id="search-box-container" style="display: {% if capacity > 0 %}flex{% else %}none{% endif %}; margin: 0;">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-student-input" class="search-input" placeholder="Tìm kiếm học sinh...">
+                </div>
+                <a href="{{ url_for('teacher_logout') }}" class="btn btn-danger" id="btn-logout" title="Đăng xuất">
+                    <i class="fa-solid fa-power-off"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Hàng Dưới: Thanh công cụ các nút điều hành lớp học -->
+        {% if capacity > 0 %}
+        <div class="header-bottom-row">
+            <!-- Nút Khóa / Mở khóa màn hình -->
+            <button class="btn btn-warning" id="btn-freeze-all" title="Khóa/Mở khóa màn hình học sinh" style="flex: 1; max-width: 200px; justify-content: center;">
+                <i class="fa-solid fa-lock"></i> <span>Khóa Màn Hình</span>
+            </button>
+            
+            <!-- Nút gửi đề bài cho học sinh -->
+            <button class="btn btn-indigo" id="btn-toggle-assignment" title="Gửi đề bài (Text, Ảnh, PDF) cho cả lớp" style="flex: 1; max-width: 200px; justify-content: center;">
+                <i class="fa-solid fa-file-signature"></i> <span>Gửi Đề Bài</span>
+            </button>
+            
+            <!-- Nút hiện bảng gửi Code mẫu -->
+            <button class="btn btn-indigo" id="btn-toggle-template" title="Gửi code mẫu cho toàn bộ lớp" style="flex: 1; max-width: 200px; justify-content: center;">
+                <i class="fa-solid fa-code"></i> <span>Gửi Code Mẫu</span>
+            </button>
+            
+            <!-- Nút bật tắt Chế độ kiểm tra -->
+            <button class="btn btn-secondary" id="btn-toggle-exam" title="Ẩn code học sinh trên máy chiếu" style="flex: 1; max-width: 200px; justify-content: center;">
+                <i class="fa-solid fa-eye-slash"></i> <span>Chế độ kiểm tra</span>
+            </button>
+            
+            <!-- Nút xuất báo cáo thu bài -->
+            <a href="{{ url_for('export_code') }}" class="btn btn-success" id="btn-export" title="Tải xuống code của toàn bộ học sinh" style="flex: 1; max-width: 200px; justify-content: center; display: inline-flex; align-items: center;">
+                <i class="fa-solid fa-download"></i> <span>Thu bài (Export)</span>
+            </a>
+            
+            <!-- Khởi tạo lại lớp học -->
+            <button class="btn btn-danger-outline" id="btn-re-setup" title="Khởi tạo lại lớp học mới" style="margin-left: auto; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-rotate-left"></i> <span>Khởi tạo lớp mới</span>
+            </button>
+        </div>
+        {% endif %}
+    </header>
+
+    <!-- Khung quản lý đề bài của Giáo viên (Assignment Drawer) -->
+    {% if capacity > 0 %}
+    <div class="template-drawer glass-panel" id="assignment-drawer" style="display: none; margin-bottom: 20px;">
+        <div class="drawer-header">
+            <h3><i class="fa-solid fa-file-signature"></i> Quản Lý Đề Bài Cho Lớp Học</h3>
+            <button class="btn-close" id="btn-close-assignment"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="drawer-body">
+            <form id="assignment-form" onsubmit="event.preventDefault();">
+                <!-- Mô tả chi tiết đề bài -->
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label for="assign-text-content" style="font-weight: 600; display: block; margin-bottom: 6px;">
+                        <i class="fa-solid fa-pen-to-square"></i> Hướng dẫn đề bài (Markdown - Có thể chụp ảnh & Ctrl+V để dán trực tiếp):
+                    </label>
+                    <textarea id="assign-text-content" rows="6" placeholder="Nhập mô tả đề bài hoặc bài tập tại đây... Hỗ trợ Markdown và dán hình ảnh từ clipboard trực tiếp..." style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 6px; color: var(--color-text-main); padding: 10px; font-family: inherit; outline: none; transition: border-color 0.3s;"></textarea>
+                </div>
+                
+                <!-- Đính kèm tệp PDF hoặc ảnh -->
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label for="assign-file-input" style="font-weight: 600; display: block; margin-bottom: 6px;">
+                        <i class="fa-solid fa-file-pdf"></i> Đính kèm tệp đề bài / Tài liệu học tập (Tùy chọn - Chấp nhận PDF hoặc Ảnh):
+                    </label>
+                    <input type="file" id="assign-file-input" accept=".pdf,.png,.jpg,.jpeg,.gif" style="width: 100%; color: var(--color-text-main);">
+                </div>
+                
+                <div class="drawer-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+                    <button type="submit" class="btn btn-primary" id="btn-push-assignment">
+                        <i class="fa-solid fa-paper-plane"></i> Gửi đề bài
+                    </button>
+                    <button type="button" class="btn btn-danger-outline" id="btn-clear-assignment">
+                        <i class="fa-solid fa-trash-can"></i> Xóa đề bài hiện tại
+                    </button>
+                    <span class="help-text" style="margin-left: auto;">Trạng thái đề bài hiện tại: <strong id="current-assignment-status" style="color: var(--warning);">Chưa có đề bài</strong></span>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Khung soạn thảo code mẫu (Template Drawer) -->
+    {% if capacity > 0 %}
+    <div class="template-drawer glass-panel" id="template-drawer" style="display: none;">
+        <div class="drawer-header">
+            <h3><i class="fa-solid fa-code"></i> Soạn thảo code mẫu</h3>
+            <button class="btn-close" id="btn-close-template"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="drawer-body">
+            <textarea id="template-code-editor"></textarea>
+            <div class="drawer-actions">
+                <p class="help-text">Lưu ý: Hành động này sẽ đè mã nguồn mẫu lên toàn bộ trình soạn thảo của học sinh.</p>
+                <button class="btn btn-primary" id="btn-push-template">
+                    <i class="fa-solid fa-paper-plane"></i> Gửi cho cả lớp
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Khu vực hiển thị lưới Grid học sinh (Student Grid Area) -->
+    <main class="dashboard-main">
+        {% if capacity > 0 %}
+            <div class="student-grid" id="student-grid" data-capacity="{{ capacity }}">
+                <!-- Các ô học sinh sẽ được JavaScript sinh tự động ra đây -->
+            </div>
+        {% else %}
+            <!-- Trạng thái chờ khởi tạo phòng học -->
+            <div class="empty-state glass-panel">
+                <div class="empty-icon">
+                    <i class="fa-solid fa-school-flag"></i>
+                </div>
+                <h2>Chưa khởi tạo buổi học hôm nay</h2>
+                <p>Vui lòng thiết lập sĩ số học sinh để bắt đầu quản lý phòng học LAN.</p>
+                <button class="btn btn-primary btn-lg" id="btn-open-setup">
+                    <i class="fa-solid fa-plus"></i> Khởi tạo buổi học
+                </button>
+            </div>
+        {% endif %}
+    </main>
+</div>
+
+<!-- Modal Thiết lập sĩ số buổi học (Setup Modal) -->
+<div class="modal-overlay" id="setup-modal" style="display: {% if capacity <= 0 %}flex{% else %}none{% endif %};">
+    <div class="modal-card glass-panel">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-sliders"></i> THIẾT LẬP LỚP HỌC</h2>
+        </div>
+        <div class="modal-body">
+            <form id="setup-session-form" onsubmit="event.preventDefault();">
+                <div class="input-group">
+                    <label for="capacity-input">Số lượng học sinh của buổi hôm nay:</label>
+                    <input type="number" id="capacity-input" min="1" max="100" value="10" required placeholder="Nhập sĩ số học sinh (Ví dụ: 20)">
+                </div>
+                <div class="modal-actions">
+                    {% if capacity > 0 %}
+                        <button type="button" class="btn btn-secondary" id="btn-cancel-setup">Hủy bỏ</button>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary" id="btn-submit-setup">
+                        Tạo lớp học <i class="fa-solid fa-circle-check"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Định nghĩa các biến môi trường từ Flask để JS static có thể đọc
+    window.CLASS_CAPACITY = parseInt("{{ capacity }}") || 0;
+
+    // Xử lý sự kiện click sao chép URL học sinh
+    document.addEventListener("DOMContentLoaded", () => {
+        const studentUrlBadge = document.getElementById("student-url-badge");
+        if (studentUrlBadge) {
+            studentUrlBadge.addEventListener("click", () => {
+                const urlText = document.getElementById("student-url-text").textContent;
+                navigator.clipboard.writeText(urlText).then(() => {
+                    const originalHTML = studentUrlBadge.innerHTML;
+                    studentUrlBadge.innerHTML = '<i class="fa-solid fa-check" style="color: #10b981;"></i> Đã sao chép!';
+                    studentUrlBadge.style.borderColor = "#10b981";
+                    studentUrlBadge.style.color = "#10b981";
+                    setTimeout(() => {
+                        studentUrlBadge.innerHTML = originalHTML;
+                        studentUrlBadge.style.borderColor = "";
+                        studentUrlBadge.style.color = "";
+                    }, 1500);
+                }).catch(err => {
+                    console.error("Lỗi khi sao chép:", err);
+                });
+            });
+        }
+    });
+</script>
+<!-- Tải JavaScript xử lý logic của Giáo viên -->
+<script src="{{ url_for('static', filename='js/teacher.js') }}?v=4"></script>
+{% endblock %}
