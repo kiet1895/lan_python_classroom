@@ -395,29 +395,6 @@ function initSocketEvents() {
         teacherTemplateConsole = data;
         renderTeacherLiveConsole(data);
     });
-
-    // Nhận kết quả học sinh tự chạy thử code mẫu cục bộ
-    socket.on("student_run_teacher_code_result", (data) => {
-        const consoleOutput = document.getElementById("teacher-live-console-output");
-        if (consoleOutput) {
-            consoleOutput.innerHTML = "";
-            consoleOutput.classList.remove("card-console-placeholder", "error");
-            
-            if (data.success) {
-                consoleOutput.textContent = data.stdout || "Chương trình chạy hoàn tất (Không có output).";
-            } else {
-                consoleOutput.classList.add("error");
-                consoleOutput.textContent = data.stderr || "Chương trình lỗi biên dịch/thực thi.";
-            }
-            consoleOutput.scrollTop = consoleOutput.scrollHeight;
-        }
-        
-        const btnRunTeacherCode = document.getElementById("btn-student-run-teacher-code");
-        if (btnRunTeacherCode) {
-            btnRunTeacherCode.disabled = false;
-            btnRunTeacherCode.innerHTML = '<i class="fa-solid fa-play"></i> Tự chạy thử';
-        }
-    });
 }
 
 /* ==========================================================================
@@ -618,23 +595,6 @@ function initUIEvents() {
     if (tabBtnTemplate) {
         tabBtnTemplate.addEventListener("click", () => {
             switchRightPaneTab("template");
-        });
-    }
-
-    const btnRunTeacherCode = document.getElementById("btn-student-run-teacher-code");
-    if (btnRunTeacherCode) {
-        btnRunTeacherCode.addEventListener("click", () => {
-            if (isFrozen) return;
-            
-            btnRunTeacherCode.disabled = true;
-            btnRunTeacherCode.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chạy...';
-            
-            const consoleOutput = document.getElementById("teacher-live-console-output");
-            consoleOutput.innerHTML = '<span class="console-placeholder"><i class="fa-solid fa-spinner fa-spin"></i> Đang thực thi mã nguồn trên hệ thống sandbox...</span>';
-            
-            const stdinVal = document.getElementById("teacher-live-stdin") ? document.getElementById("teacher-live-stdin").value : "";
-            
-            socket.emit("student_run_teacher_code", { stdin: stdinVal });
         });
     }
 }

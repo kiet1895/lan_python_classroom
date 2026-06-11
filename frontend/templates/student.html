@@ -182,16 +182,13 @@
                             
                             <div class="template-student-console-panel">
                                 <div class="template-student-stdin-section">
-                                    <label for="teacher-live-stdin"><i class="fa-solid fa-keyboard"></i> Nhập dữ liệu test (Stdin):</label>
-                                    <textarea id="teacher-live-stdin" placeholder="Nhập dữ liệu test cho ví dụ của GV tại đây..."></textarea>
+                                    <label for="teacher-live-stdin"><i class="fa-solid fa-keyboard"></i> Dữ liệu đầu vào (Input):</label>
+                                    <textarea id="teacher-live-stdin" placeholder="Chưa có dữ liệu đầu vào..." readonly></textarea>
                                 </div>
                                 
                                 <div class="template-student-console-section">
                                     <div class="template-student-console-header">
-                                        <span><i class="fa-solid fa-terminal"></i> Kết quả chạy chương trình</span>
-                                        <button class="btn btn-indigo btn-sm" id="btn-student-run-teacher-code" title="Tự chạy thử code mẫu của GV bằng input của bạn">
-                                            <i class="fa-solid fa-play"></i> Tự chạy thử
-                                        </button>
+                                        <span><i class="fa-solid fa-terminal"></i> Kết quả (Console)</span>
                                     </div>
                                     <div class="console-body card-console-placeholder" id="teacher-live-console-output">Chờ chạy...</div>
                                 </div>
@@ -266,6 +263,6 @@
     window.CLASS_FROZEN = {% if is_frozen %}true{% else %}false{% endif %};
 </script>
 <!-- Tải JavaScript xử lý logic của Học sinh -->
-<script src="{{ url_for('static', filename='js/student.js') }}?v=8"></script>
+<script src="{{ url_for('static', filename='js/student.js') }}?v=9"></script>
 {% endif %}
 {% endblock %}

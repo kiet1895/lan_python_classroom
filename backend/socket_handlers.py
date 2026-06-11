@@ -484,26 +484,4 @@ def register_socket_handlers(socketio):
         
         emit('teacher_template_run_result', db.template_console, broadcast=True)
 
-    @socketio.on('student_run_teacher_code')
-    def handle_student_run_teacher_code(data):
-        """Học sinh tự chạy code mẫu của Giáo viên với input của chính học sinh."""
-        ip = get_client_ip()
-        
-        if db.is_frozen:
-            emit('student_run_teacher_code_result', {
-                'success': False,
-                'stdout': '',
-                'stderr': 'Thao tác bị chặn: Màn hình của bạn đang bị khóa bởi Giáo viên.'
-            })
-            return
-            
-        stdin = data.get('stdin', '')
-        code = db.code_template
-        result = execute_python_code(code, stdin=stdin)
-        
-        emit('student_run_teacher_code_result', {
-            'success': result['success'],
-            'stdout': result['stdout'],
-            'stderr': result['stderr']
-        })
 
