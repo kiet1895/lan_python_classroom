@@ -10,6 +10,12 @@ let lastTeacherEditTimes = {}; // ip -> timestamp (thời gian giáo viên gõ p
 let lastTeacherStdinEditTimes = {}; // ip -> timestamp (tránh ghi đè khi giáo viên đang nhập liệu stdin)
 let teacherStdinSyncTimeouts = {}; // ip -> timeout
 
+let isSharingTemplateLive = false;
+let teacherTemplateCode = "";
+let teacherTemplateStdin = "";
+let teacherTemplateConsole = null;
+
+
 let isFrozenGlobal = false;
 let examModeGlobal = false;
 
@@ -90,9 +96,23 @@ function initSocketEvents() {
             // Cập nhật trạng thái đề bài hiển thị trên drawer
             renderAssignmentStatus();
             
-            // Nếu có code mẫu từ trước, nạp vào drawer soạn thảo
+            // Lưu và hiển thị trạng thái code mẫu
+            isSharingTemplateLive = data.is_sharing_template || false;
+            teacherTemplateCode = data.code_template || "";
+            teacherTemplateStdin = data.template_stdin || "";
+            teacherTemplateConsole = data.template_console || null;
+            
+            updateShareLiveButtonUI(isSharingTemplateLive);
+            
             if (templateEditor) {
-                templateEditor.setValue(data.code_template || "");
+                templateEditor.setValue(teacherTemplateCode);
+            }
+            const stdinInput = document.getElementById("template-stdin-input");
+            if (stdinInput) {
+                stdinInput.value = teacherTemplateStdin;
+            }
+            if (teacherTemplateConsole) {
+                renderTemplateConsoleOutput(teacherTemplateConsole);
             }
         }
     });
@@ -337,6 +357,50 @@ function initSocketEvents() {
                 }
             }
         });
+    });
+
+    // Đồng bộ trạng thái chia sẻ bài giảng trực tiếp
+    socket.on("teacher_share_template_state", (data) => {
+        isSharingTemplateLive = data.share;
+        teacherTemplateCode = data.code;
+        teacherTemplateStdin = data.stdin;
+        teacherTemplateConsole = data.console;
+        
+        updateShareLiveButtonUI(isSharingTemplateLive);
+        
+        if (templateEditor && templateEditor.getValue() !== teacherTemplateCode) {
+            templateEditor.setValue(teacherTemplateCode);
+        }
+        const stdinInput = document.getElementById("template-stdin-input");
+        if (stdinInput && stdinInput.value !== teacherTemplateStdin) {
+            stdinInput.value = teacherTemplateStdin;
+        }
+        if (teacherTemplateConsole) {
+            renderTemplateConsoleOutput(teacherTemplateConsole);
+        }
+    });
+
+    // Đồng bộ thay đổi code mẫu khi gõ trên máy khác
+    socket.on("teacher_template_code_sync", (data) => {
+        teacherTemplateCode = data.code;
+        if (templateEditor && templateEditor.getValue() !== teacherTemplateCode) {
+            templateEditor.setValue(teacherTemplateCode);
+        }
+    });
+
+    // Đồng bộ thay đổi input của code mẫu
+    socket.on("teacher_template_stdin_sync", (data) => {
+        teacherTemplateStdin = data.stdin;
+        const stdinInput = document.getElementById("template-stdin-input");
+        if (stdinInput && stdinInput.value !== teacherTemplateStdin) {
+            stdinInput.value = teacherTemplateStdin;
+        }
+    });
+
+    // Đồng bộ kết quả chạy thử code mẫu
+    socket.on("teacher_template_run_result", (data) => {
+        teacherTemplateConsole = data;
+        renderTemplateConsoleOutput(data);
     });
 }
 
@@ -951,6 +1015,72 @@ function initTemplateEditor() {
             }
         }
     });
+
+    // Nạp code mẫu ban đầu
+    templateEditor.setValue(teacherTemplateCode);
+
+    // Đồng bộ code mẫu khi gõ (debounce)
+    let templateSyncTimeout;
+    templateEditor.on("change", (instance, changeObj) => {
+        if (changeObj && changeObj.origin === "setValue") return;
+        
+        clearTimeout(templateSyncTimeout);
+        templateSyncTimeout = setTimeout(() => {
+            const code = templateEditor.getValue();
+            teacherTemplateCode = code;
+            socket.emit("teacher_template_sync", { code: code });
+        }, 300);
+    });
+
+    // Đồng bộ dữ liệu đầu vào (stdin)
+    const stdinInput = document.getElementById("template-stdin-input");
+    if (stdinInput) {
+        stdinInput.value = teacherTemplateStdin;
+        let stdinSyncTimeout;
+        stdinInput.addEventListener("input", () => {
+            clearTimeout(stdinSyncTimeout);
+            stdinSyncTimeout = setTimeout(() => {
+                const stdin = stdinInput.value;
+                teacherTemplateStdin = stdin;
+                socket.emit("teacher_template_stdin_sync", { stdin: stdin });
+            }, 300);
+        });
+    }
+
+    // Kết quả console ban đầu
+    if (teacherTemplateConsole) {
+        renderTemplateConsoleOutput(teacherTemplateConsole);
+    }
+
+    // Nút chạy thử ví dụ
+    const btnRunTemplate = document.getElementById("btn-run-template");
+    if (btnRunTemplate) {
+        btnRunTemplate.addEventListener("click", () => {
+            const consoleBody = document.getElementById("template-console-output");
+            const consoleStatus = document.querySelector(".template-console-status");
+            if (consoleBody) {
+                consoleBody.className = "console-body card-console-placeholder";
+                consoleBody.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chạy ví dụ...';
+                if (consoleStatus) {
+                    consoleStatus.textContent = "Đang chạy...";
+                    consoleStatus.style.color = "#38bdf8";
+                }
+            }
+            socket.emit("teacher_run_template_code", {
+                code: templateEditor.getValue(),
+                stdin: stdinInput ? stdinInput.value : ""
+            });
+        });
+    }
+
+    // Nút Chia sẻ trực tiếp
+    const btnShareTemplateLive = document.getElementById("btn-share-template-live");
+    if (btnShareTemplateLive) {
+        btnShareTemplateLive.addEventListener("click", () => {
+            const nextShareState = !isSharingTemplateLive;
+            socket.emit("toggle_share_template_live", { share: nextShareState });
+        });
+    }
 }
 
 /* ==========================================================================
@@ -1135,3 +1265,44 @@ window.syncTeacherEditedStdin = function(ip) {
         });
     }, 400); // Debounce 400ms
 };
+
+function updateShareLiveButtonUI(isSharing) {
+    const btn = document.getElementById("btn-share-template-live");
+    if (!btn) return;
+    
+    if (isSharing) {
+        btn.className = "btn btn-warning";
+        btn.innerHTML = '<i class="fa-solid fa-chalkboard-user"></i> Chia sẻ trực tiếp: Bật';
+        btn.title = "Dừng chia sẻ trực tiếp ví dụ này cho học sinh";
+    } else {
+        btn.className = "btn btn-secondary";
+        btn.innerHTML = '<i class="fa-solid fa-chalkboard-user"></i> Chia sẻ trực tiếp: Tắt';
+        btn.title = "Chia sẻ trực tiếp code mẫu và kết quả chạy cho học sinh xem thời gian thực";
+    }
+}
+
+function renderTemplateConsoleOutput(data) {
+    const consoleBody = document.getElementById("template-console-output");
+    const consoleStatus = document.querySelector(".template-console-status");
+    if (!consoleBody) return;
+    
+    consoleBody.innerHTML = "";
+    consoleBody.classList.remove("card-console-placeholder", "error");
+    
+    if (data.success) {
+        consoleBody.textContent = data.stdout || "Chương trình chạy hoàn tất (Không có output).";
+        if (consoleStatus) {
+            consoleStatus.textContent = "Thành công";
+            consoleStatus.style.color = "#10b981";
+        }
+    } else {
+        consoleBody.classList.add("error");
+        consoleBody.textContent = data.stderr || "Chương trình lỗi biên dịch/thực thi.";
+        if (consoleStatus) {
+            consoleStatus.textContent = `Lỗi (code ${data.exit_code})`;
+            consoleStatus.style.color = "#ef4444";
+        }
+    }
+    consoleBody.scrollTop = consoleBody.scrollHeight;
+}
+

@@ -58,7 +58,11 @@ def register_socket_handlers(socketio):
                 'hand_raised': student['hand_raised'],
                 'slot_id': student['slot_id'],
                 'is_frozen': db.is_frozen,
-                'assignment': db.get_assignment()
+                'assignment': db.get_assignment(),
+                'is_sharing_template': db.is_sharing_template,
+                'code_template': db.code_template,
+                'template_stdin': db.template_stdin,
+                'template_console': db.template_console
             })
             # Gửi thêm thông tin các bài đang được chia sẻ cho máy con vừa kết nối
             emit('shared_codes_update', {'shared_students': db.get_shared_students()})
@@ -89,6 +93,9 @@ def register_socket_handlers(socketio):
             'is_frozen': db.is_frozen,
             'exam_mode': db.exam_mode,
             'code_template': db.code_template,
+            'is_sharing_template': db.is_sharing_template,
+            'template_stdin': db.template_stdin,
+            'template_console': db.template_console,
             'shared_ips': list(db.shared_ips),
             'assignment': db.get_assignment()
         })
@@ -116,6 +123,13 @@ def register_socket_handlers(socketio):
         emit('login_success', student)
         # Gửi thêm đề bài hiện tại (nếu có)
         emit('assignment_updated', db.get_assignment())
+        # Gửi trạng thái chia sẻ bài mẫu hiện tại của GV
+        emit('teacher_share_template_state', {
+            'share': db.is_sharing_template,
+            'code': db.code_template,
+            'stdin': db.template_stdin,
+            'console': db.template_console
+        })
         
         # Cập nhật danh sách hiển thị trên máy giáo viên
         emit('student_update', {'ip': ip, 'student': student}, room='teachers')
@@ -421,3 +435,75 @@ def register_socket_handlers(socketio):
             if ip in db.shared_ips:
                 student = db.get_student_by_ip(ip)
                 emit('shared_code_sync', {'ip': ip, 'code': student['code']}, room='students')
+
+    @socketio.on('toggle_share_template_live')
+    def handle_toggle_share_template_live(data):
+        """Giáo viên bật/tắt chia sẻ trực tiếp code mẫu."""
+        share = bool(data.get('share', False))
+        db.is_sharing_template = share
+        emit('teacher_share_template_state', {
+            'share': share,
+            'code': db.code_template,
+            'stdin': db.template_stdin,
+            'console': db.template_console
+        }, broadcast=True)
+
+    @socketio.on('teacher_template_sync')
+    def handle_teacher_template_sync(data):
+        """Giáo viên gõ thay đổi code mẫu."""
+        code = data.get('code', '')
+        db.code_template = code
+        emit('teacher_template_code_sync', {'code': code}, broadcast=True, include_self=False)
+
+    @socketio.on('teacher_template_stdin_sync')
+    def handle_teacher_template_stdin_sync(data):
+        """Giáo viên thay đổi ô input của code mẫu."""
+        stdin = data.get('stdin', '')
+        db.template_stdin = stdin
+        emit('teacher_template_stdin_sync', {'stdin': stdin}, broadcast=True, include_self=False)
+
+    @socketio.on('teacher_run_template_code')
+    def handle_teacher_run_template_code(data=None):
+        """Giáo viên chạy thử code mẫu."""
+        if data:
+            if 'code' in data:
+                db.code_template = data['code']
+            if 'stdin' in data:
+                db.template_stdin = data['stdin']
+                
+        code = db.code_template
+        stdin = db.template_stdin
+        result = execute_python_code(code, stdin=stdin)
+        
+        db.template_console = {
+            'success': result['success'],
+            'stdout': result['stdout'],
+            'stderr': result['stderr'],
+            'exit_code': result['exit_code']
+        }
+        
+        emit('teacher_template_run_result', db.template_console, broadcast=True)
+
+    @socketio.on('student_run_teacher_code')
+    def handle_student_run_teacher_code(data):
+        """Học sinh tự chạy code mẫu của Giáo viên với input của chính học sinh."""
+        ip = get_client_ip()
+        
+        if db.is_frozen:
+            emit('student_run_teacher_code_result', {
+                'success': False,
+                'stdout': '',
+                'stderr': 'Thao tác bị chặn: Màn hình của bạn đang bị khóa bởi Giáo viên.'
+            })
+            return
+            
+        stdin = data.get('stdin', '')
+        code = db.code_template
+        result = execute_python_code(code, stdin=stdin)
+        
+        emit('student_run_teacher_code_result', {
+            'success': result['success'],
+            'stdout': result['stdout'],
+            'stderr': result['stderr']
+        })
+

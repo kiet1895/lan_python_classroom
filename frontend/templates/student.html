@@ -148,6 +148,9 @@
                         <i class="fa-solid fa-square-share-nodes"></i> Bài Chia Sẻ
                         <span class="badge badge-red d-none" id="shared-noti-dot"></span>
                     </button>
+                    <button class="pane-tab d-none" id="pane-tab-template" title="Xem bài mẫu của giáo viên giảng bài">
+                        <i class="fa-solid fa-chalkboard-user"></i> Bài Mẫu GV
+                    </button>
                 </div>
                 
                 <div class="right-pane-body">
@@ -167,6 +170,32 @@
                     <div class="pane-content d-none" id="pane-content-shared">
                         <div class="shared-panel-body" id="shared-editors-container">
                             <!-- Được JS sinh động các editor CodeMirror của bạn bè ra đây -->
+                        </div>
+                    </div>
+
+                    <!-- Nội dung bài mẫu của giáo viên -->
+                    <div class="pane-content d-none" id="pane-content-template">
+                        <div class="template-student-wrapper">
+                            <div class="template-student-editor-section">
+                                <textarea id="teacher-live-editor"></textarea>
+                            </div>
+                            
+                            <div class="template-student-console-panel">
+                                <div class="template-student-stdin-section">
+                                    <label for="teacher-live-stdin"><i class="fa-solid fa-keyboard"></i> Nhập dữ liệu test (Stdin):</label>
+                                    <textarea id="teacher-live-stdin" placeholder="Nhập dữ liệu test cho ví dụ của GV tại đây..."></textarea>
+                                </div>
+                                
+                                <div class="template-student-console-section">
+                                    <div class="template-student-console-header">
+                                        <span><i class="fa-solid fa-terminal"></i> Kết quả chạy chương trình</span>
+                                        <button class="btn btn-indigo btn-sm" id="btn-student-run-teacher-code" title="Tự chạy thử code mẫu của GV bằng input của bạn">
+                                            <i class="fa-solid fa-play"></i> Tự chạy thử
+                                        </button>
+                                    </div>
+                                    <div class="console-body card-console-placeholder" id="teacher-live-console-output">Chờ chạy...</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -237,6 +266,6 @@
     window.CLASS_FROZEN = {% if is_frozen %}true{% else %}false{% endif %};
 </script>
 <!-- Tải JavaScript xử lý logic của Học sinh -->
-<script src="{{ url_for('static', filename='js/student.js') }}?v=7"></script>
+<script src="{{ url_for('static', filename='js/student.js') }}?v=8"></script>
 {% endif %}
 {% endblock %}

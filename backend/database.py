@@ -25,6 +25,9 @@ class Database:
         
         # Code mẫu hiện tại đang được giáo viên chia sẻ
         self.code_template = ""
+        self.is_sharing_template = False
+        self.template_stdin = ""
+        self.template_console = {"success": True, "stdout": "", "stderr": "", "exit_code": 0}
         
         # Chế độ kiểm tra (ẩn code giữa các máy con trên màn hình giáo viên)
         self.exam_mode = False
@@ -50,6 +53,9 @@ class Database:
             self.students.clear()
             self.is_frozen = False
             self.code_template = ""
+            self.is_sharing_template = False
+            self.template_stdin = ""
+            self.template_console = {"success": True, "stdout": "", "stderr": "", "exit_code": 0}
             self.exam_mode = False
             self.shared_ips.clear()
             self.assignment = {

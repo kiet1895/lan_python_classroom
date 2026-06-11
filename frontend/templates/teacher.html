@@ -120,12 +120,37 @@
             <button class="btn-close" id="btn-close-template"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="drawer-body">
-            <textarea id="template-code-editor"></textarea>
+            <div class="template-editor-wrapper">
+                <textarea id="template-code-editor"></textarea>
+            </div>
+            
+            <div class="template-console-panel">
+                <div class="template-stdin-section">
+                    <label for="template-stdin-input"><i class="fa-solid fa-keyboard"></i> Dữ liệu đầu vào (Input):</label>
+                    <textarea id="template-stdin-input" placeholder="Nhập dữ liệu test cho ví dụ tại đây..."></textarea>
+                </div>
+                <div class="template-console-section">
+                    <div class="template-console-header">
+                        <span><i class="fa-solid fa-terminal"></i> Kết quả (Console)</span>
+                        <span class="template-console-status"></span>
+                    </div>
+                    <div class="console-body card-console-placeholder" id="template-console-output">Chờ chạy...</div>
+                </div>
+            </div>
+
             <div class="drawer-actions">
-                <p class="help-text">Lưu ý: Hành động này sẽ đè mã nguồn mẫu lên toàn bộ trình soạn thảo của học sinh.</p>
-                <button class="btn btn-primary" id="btn-push-template">
-                    <i class="fa-solid fa-paper-plane"></i> Gửi cho cả lớp
-                </button>
+                <p class="help-text">Lưu ý: "Gửi cho cả lớp" sẽ ghi đè code mẫu lên bài làm học sinh. "Chia sẻ trực tiếp" để học sinh xem live ở cột bên phải.</p>
+                <div class="drawer-action-buttons" style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%;">
+                    <button class="btn btn-indigo" id="btn-run-template" title="Chạy thử code mẫu trên hệ thống sandbox">
+                        <i class="fa-solid fa-play"></i> Chạy thử ví dụ
+                    </button>
+                    <button class="btn btn-secondary" id="btn-share-template-live" title="Chia sẻ trực tiếp code mẫu và kết quả chạy cho học sinh xem thời gian thực">
+                        <i class="fa-solid fa-chalkboard-user"></i> Chia sẻ trực tiếp: Tắt
+                    </button>
+                    <button class="btn btn-primary" id="btn-push-template" style="margin-left: auto;">
+                        <i class="fa-solid fa-paper-plane"></i> Gửi cho cả lớp
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -208,5 +233,5 @@
     });
 </script>
 <!-- Tải JavaScript xử lý logic của Giáo viên -->
-<script src="{{ url_for('static', filename='js/teacher.js') }}?v=8"></script>
+<script src="{{ url_for('static', filename='js/teacher.js') }}?v=9"></script>
 {% endblock %}

@@ -15,7 +15,13 @@ let activeTabId = "tab_default";
 
 // Trạng thái Right Pane học sinh (Đề bài & Bài chia sẻ)
 let rightPaneActiveTab = "assignment";
+let teacherLiveEditor = null;
+let isSharingTemplateLive = false;
+let teacherTemplateCode = "";
+let teacherTemplateStdin = "";
+let teacherTemplateConsole = null;
 let currentAssignment = { type: "none", content: "", filename: "" };
+
 let currentSharedStudents = {}; // Cache danh sách bạn học đang được chia sẻ
 let sharedStudentEditors = {}; // ip -> cm_instance (Phạm vi toàn cục)
 
@@ -154,6 +160,14 @@ function initSocketEvents() {
         if (data.assignment) {
             renderAssignment(data.assignment);
         }
+        
+        // Khôi phục trạng thái chia sẻ bài mẫu GV
+        updateTemplateShareUI(
+            data.is_sharing_template,
+            data.code_template,
+            data.template_stdin,
+            data.template_console
+        );
     });
 
     // Giáo viên làm mới buổi học -> Tải lại trang để đăng nhập mới
@@ -353,6 +367,57 @@ function initSocketEvents() {
             cm.setValue(code);
         }
     });
+
+    // Nhận trạng thái chia sẻ bài giảng trực tiếp từ Giáo viên
+    socket.on("teacher_share_template_state", (data) => {
+        updateTemplateShareUI(data.share, data.code, data.stdin, data.console);
+    });
+
+    // Đồng bộ thay đổi code mẫu khi Giáo viên gõ trực tiếp
+    socket.on("teacher_template_code_sync", (data) => {
+        teacherTemplateCode = data.code;
+        if (teacherLiveEditor && teacherLiveEditor.getValue() !== data.code) {
+            teacherLiveEditor.setValue(data.code);
+        }
+    });
+
+    // Đồng bộ thay đổi input mẫu của Giáo viên
+    socket.on("teacher_template_stdin_sync", (data) => {
+        teacherTemplateStdin = data.stdin;
+        const stdinInput = document.getElementById("teacher-live-stdin");
+        if (stdinInput && stdinInput.value !== data.stdin) {
+            stdinInput.value = data.stdin;
+        }
+    });
+
+    // Nhận kết quả chạy của Giáo viên trên bài mẫu
+    socket.on("teacher_template_run_result", (data) => {
+        teacherTemplateConsole = data;
+        renderTeacherLiveConsole(data);
+    });
+
+    // Nhận kết quả học sinh tự chạy thử code mẫu cục bộ
+    socket.on("student_run_teacher_code_result", (data) => {
+        const consoleOutput = document.getElementById("teacher-live-console-output");
+        if (consoleOutput) {
+            consoleOutput.innerHTML = "";
+            consoleOutput.classList.remove("card-console-placeholder", "error");
+            
+            if (data.success) {
+                consoleOutput.textContent = data.stdout || "Chương trình chạy hoàn tất (Không có output).";
+            } else {
+                consoleOutput.classList.add("error");
+                consoleOutput.textContent = data.stderr || "Chương trình lỗi biên dịch/thực thi.";
+            }
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        const btnRunTeacherCode = document.getElementById("btn-student-run-teacher-code");
+        if (btnRunTeacherCode) {
+            btnRunTeacherCode.disabled = false;
+            btnRunTeacherCode.innerHTML = '<i class="fa-solid fa-play"></i> Tự chạy thử';
+        }
+    });
 }
 
 /* ==========================================================================
@@ -546,6 +611,30 @@ function initUIEvents() {
     if (tabBtnShared) {
         tabBtnShared.addEventListener("click", () => {
             switchRightPaneTab("shared");
+        });
+    }
+
+    const tabBtnTemplate = document.getElementById("pane-tab-template");
+    if (tabBtnTemplate) {
+        tabBtnTemplate.addEventListener("click", () => {
+            switchRightPaneTab("template");
+        });
+    }
+
+    const btnRunTeacherCode = document.getElementById("btn-student-run-teacher-code");
+    if (btnRunTeacherCode) {
+        btnRunTeacherCode.addEventListener("click", () => {
+            if (isFrozen) return;
+            
+            btnRunTeacherCode.disabled = true;
+            btnRunTeacherCode.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chạy...';
+            
+            const consoleOutput = document.getElementById("teacher-live-console-output");
+            consoleOutput.innerHTML = '<span class="console-placeholder"><i class="fa-solid fa-spinner fa-spin"></i> Đang thực thi mã nguồn trên hệ thống sandbox...</span>';
+            
+            const stdinVal = document.getElementById("teacher-live-stdin") ? document.getElementById("teacher-live-stdin").value : "";
+            
+            socket.emit("student_run_teacher_code", { stdin: stdinVal });
         });
     }
 }
@@ -881,20 +970,27 @@ function switchRightPaneTab(tab) {
     
     const btnAssignment = document.getElementById("pane-tab-assignment");
     const btnShared = document.getElementById("pane-tab-shared");
+    const btnTemplate = document.getElementById("pane-tab-template");
     const contentAssignment = document.getElementById("pane-content-assignment");
     const contentShared = document.getElementById("pane-content-shared");
+    const contentTemplate = document.getElementById("pane-content-template");
     
     if (!btnAssignment || !btnShared || !contentAssignment || !contentShared) return;
     
+    // Reset active classes
+    btnAssignment.classList.remove("active");
+    btnShared.classList.remove("active");
+    if (btnTemplate) btnTemplate.classList.remove("active");
+    
+    contentAssignment.classList.add("d-none");
+    contentShared.classList.add("d-none");
+    if (contentTemplate) contentTemplate.classList.add("d-none");
+    
     if (tab === "assignment") {
         btnAssignment.classList.add("active");
-        btnShared.classList.remove("active");
         contentAssignment.classList.remove("d-none");
-        contentShared.classList.add("d-none");
-    } else {
-        btnAssignment.classList.remove("active");
+    } else if (tab === "shared") {
         btnShared.classList.add("active");
-        contentAssignment.classList.add("d-none");
         contentShared.classList.remove("d-none");
         
         // Ẩn chấm đỏ thông báo
@@ -905,6 +1001,17 @@ function switchRightPaneTab(tab) {
         setTimeout(() => {
             Object.values(sharedStudentEditors).forEach(cm => cm.refresh());
         }, 50);
+    } else if (tab === "template") {
+        if (btnTemplate && contentTemplate) {
+            btnTemplate.classList.add("active");
+            contentTemplate.classList.remove("d-none");
+            
+            // Tự động refresh editor live mẫu
+            initTeacherLiveEditor();
+            setTimeout(() => {
+                if (teacherLiveEditor) teacherLiveEditor.refresh();
+            }, 50);
+        }
     }
 }
 
@@ -916,8 +1023,9 @@ function checkRightPaneVisibility() {
     
     const hasAssignment = currentAssignment && currentAssignment.type !== "none";
     const hasShared = Object.keys(currentSharedStudents).length > 0;
+    const hasTemplate = isSharingTemplateLive;
     
-    if (!hasAssignment && !hasShared) {
+    if (!hasAssignment && !hasShared && !hasTemplate) {
         rightPane.classList.add("d-none");
         if (resizer) resizer.classList.add("d-none");
         workspaceMain.classList.remove("has-shared");
@@ -1092,3 +1200,92 @@ function initResizer() {
         }
     });
 }
+
+function updateTemplateShareUI(share, code, stdin, consoleData) {
+    isSharingTemplateLive = share;
+    
+    const tabBtn = document.getElementById("pane-tab-template");
+    const rightPane = document.getElementById("right-pane");
+    const workspaceMain = document.getElementById("student-workspace-main");
+    const resizer = document.getElementById("workspace-resizer");
+    
+    if (!tabBtn) return;
+    
+    if (share) {
+        tabBtn.classList.remove("d-none");
+        
+        // Auto open right pane and switch to "template" tab if teacher turned sharing on
+        if (rightPane && rightPane.classList.contains("d-none")) {
+            rightPane.classList.remove("d-none");
+            if (resizer) resizer.classList.remove("d-none");
+            if (workspaceMain) workspaceMain.classList.add("has-shared");
+        }
+        switchRightPaneTab("template");
+        
+        // Load data into teacherLiveEditor
+        if (code !== undefined) {
+            teacherTemplateCode = code;
+            initTeacherLiveEditor();
+            if (teacherLiveEditor) {
+                teacherLiveEditor.setValue(code);
+            }
+        }
+        // Load stdin
+        const stdinInput = document.getElementById("teacher-live-stdin");
+        if (stdinInput && stdin !== undefined) {
+            teacherTemplateStdin = stdin;
+            stdinInput.value = stdin;
+        }
+        // Load console
+        if (consoleData !== undefined) {
+            teacherTemplateConsole = consoleData;
+            renderTeacherLiveConsole(consoleData);
+        }
+    } else {
+        tabBtn.classList.add("d-none");
+        
+        // If template tab was active, switch back to assignment
+        if (rightPaneActiveTab === "template") {
+            switchRightPaneTab("assignment");
+        }
+        checkRightPaneVisibility();
+    }
+}
+
+function initTeacherLiveEditor() {
+    const textarea = document.getElementById("teacher-live-editor");
+    if (!textarea || teacherLiveEditor) return;
+    
+    teacherLiveEditor = CodeMirror.fromTextArea(textarea, {
+        mode: "python",
+        theme: "dracula",
+        lineNumbers: true,
+        readOnly: true, // Read-only for students
+        lineWrapping: true,
+        matchBrackets: true,
+        inputStyle: "contenteditable"
+    });
+}
+
+function renderTeacherLiveConsole(data) {
+    const consoleBody = document.getElementById("teacher-live-console-output");
+    if (!consoleBody) return;
+    
+    consoleBody.innerHTML = "";
+    consoleBody.classList.remove("card-console-placeholder", "error");
+    
+    if (!data) {
+        consoleBody.textContent = "Chờ chạy...";
+        consoleBody.classList.add("card-console-placeholder");
+        return;
+    }
+    
+    if (data.success) {
+        consoleBody.textContent = data.stdout || "Chương trình chạy hoàn tất (Không có output).";
+    } else {
+        consoleBody.classList.add("error");
+        consoleBody.textContent = data.stderr || "Chương trình lỗi biên dịch/thực thi.";
+    }
+    consoleBody.scrollTop = consoleBody.scrollHeight;
+}
+
