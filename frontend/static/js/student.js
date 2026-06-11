@@ -330,6 +330,7 @@ function initSocketEvents() {
                     lineNumbers: true,
                     readOnly: true, // Bài của bạn chỉ được phép xem
                     lineWrapping: true,
+                    matchBrackets: true,
                     inputStyle: "contenteditable"
                 });
                 cm.setValue(studentInfo.code || "");
@@ -565,6 +566,8 @@ function initWorkspace() {
         tabSize: 4,
         indentWithTabs: false,
         lineWrapping: true,
+        matchBrackets: true,
+        autoCloseBrackets: true,
         inputStyle: "contenteditable", // Cấu hình bắt buộc để gõ tiếng Việt Telex/VNI và hỗ trợ các phím tắt ctrl+a, ctrl+c...
         extraKeys: { 
             "Tab": "defaultTab",

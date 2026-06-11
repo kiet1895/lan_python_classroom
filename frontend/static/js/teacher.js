@@ -811,6 +811,8 @@ function renderStudentSlot(ip, student) {
         lineNumbers: true,
         readOnly: false, // Giáo viên có thể sửa trực tiếp để trợ giúp học sinh
         lineWrapping: true,
+        matchBrackets: true,
+        autoCloseBrackets: true,
         inputStyle: "contenteditable", // Hỗ trợ gõ tiếng Việt Telex/VNI và tổ hợp phím tắt chuẩn
         extraKeys: {
             "Ctrl-3": function(editor) { editor.toggleComment(); },
@@ -927,6 +929,8 @@ function initTemplateEditor() {
         indentUnit: 4,
         tabSize: 4,
         lineWrapping: true,
+        matchBrackets: true,
+        autoCloseBrackets: true,
         inputStyle: "contenteditable", // Gõ tiếng Việt & phím tắt
         extraKeys: {
             "Ctrl-3": function(editor) { editor.toggleComment(); },
