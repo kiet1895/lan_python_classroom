@@ -149,7 +149,6 @@ def export_code():
     )
 
 @app.route('/teacher/set_assignment', methods=['POST'])
-@app.route('/teacher/set_assignment', methods=['POST'])
 def set_assignment():
     """Giáo viên đăng tải đề bài mới."""
     if not session.get('teacher_logged_in'):
