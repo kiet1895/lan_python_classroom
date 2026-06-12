@@ -648,6 +648,17 @@ a:hover {
     font-feature-settings: "liga" 0, "calt" 0;
 }
 
+/* Chặn chọn/copy số dòng trong CodeMirror */
+.CodeMirror-gutters,
+.CodeMirror-gutter,
+.CodeMirror-linenumber,
+.CodeMirror-gutter-wrapper {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
 /* Console học sinh */
 .console-container {
     display: flex;
