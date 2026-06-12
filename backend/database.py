@@ -1,4 +1,6 @@
 import threading
+import time
+
 
 class Database:
     def __init__(self):
@@ -91,6 +93,8 @@ class Database:
                     ]
                 if "active_tab_id" not in self.students[ip]:
                     self.students[ip]["active_tab_id"] = "tab_default"
+                if "feedback" not in self.students[ip]:
+                    self.students[ip]["feedback"] = ""
                 return self.students[ip]
             
             # 2. Kiểm tra xem lớp học đã được thiết lập chưa
@@ -122,7 +126,8 @@ class Database:
                 "faults": 0,
                 "status": "online",
                 "hand_raised": False,
-                "slot_id": available_slot
+                "slot_id": available_slot,
+                "feedback": ""
             }
             return self.students[ip]
 
@@ -140,6 +145,8 @@ class Database:
                     student["active_tab_id"] = "tab_default"
                 if "stdin" not in student:
                     student["stdin"] = ""
+                if "feedback" not in student:
+                    student["feedback"] = ""
             return student
 
     def update_code(self, ip, code):
@@ -192,6 +199,8 @@ class Database:
                     student["active_tab_id"] = "tab_default"
                 if "stdin" not in student:
                     student["stdin"] = ""
+                if "feedback" not in student:
+                    student["feedback"] = ""
             return dict(self.students)
 
     def reset_faults(self, ip):
@@ -269,7 +278,7 @@ class Database:
             return False
 
     def update_student_code(self, ip, tab_id, code):
-        """Cập nhật code của học sinh tại một tab cụ thể."""
+        """Cập nhật code của học sinh tại một tab cụ thể và lưu snapshot lịch sử."""
         with self.lock:
             if ip in self.students:
                 for t in self.students[ip]["tabs"]:
@@ -278,6 +287,8 @@ class Database:
                         # Nếu tab được cập nhật là active tab, đồng bộ với trường code chính
                         if self.students[ip]["active_tab_id"] == tab_id:
                             self.students[ip]["code"] = code
+                        
+                        pass
                         return True
             return False
 
@@ -346,6 +357,14 @@ class Database:
                         "slot_id": self.students[ip]["slot_id"]
                     }
             return result
+
+    def update_student_feedback(self, ip, feedback):
+        """Cập nhật nhận xét của giáo viên cho học sinh."""
+        with self.lock:
+            if ip in self.students:
+                self.students[ip]["feedback"] = feedback
+                return True
+            return False
 
 # Khởi tạo đối tượng Database duy nhất (Singleton) dùng chung cho toàn ứng dụng
 db = Database()

@@ -1,7 +1,11 @@
+import re
 from flask import request
 from flask_socketio import emit, join_room, leave_room
 from backend.database import db
 from backend.code_runner import execute_python_code
+
+
+
 
 # Quản lý ánh xạ kết nối socket để kiểm soát online/offline động
 # ip_to_sids: { ip: set(sid) }
@@ -62,7 +66,8 @@ def register_socket_handlers(socketio):
                 'is_sharing_template': db.is_sharing_template,
                 'code_template': db.code_template,
                 'template_stdin': db.template_stdin,
-                'template_console': db.template_console
+                'template_console': db.template_console,
+                'feedback': student.get('feedback', '')
             })
             # Gửi thêm thông tin các bài đang được chia sẻ cho máy con vừa kết nối
             emit('shared_codes_update', {'shared_students': db.get_shared_students()})
@@ -133,6 +138,7 @@ def register_socket_handlers(socketio):
         
         # Cập nhật danh sách hiển thị trên máy giáo viên
         emit('student_update', {'ip': ip, 'student': student}, room='teachers')
+
 
     @socketio.on('code_sync')
     def handle_code_sync(data):
@@ -483,5 +489,17 @@ def register_socket_handlers(socketio):
         }
         
         emit('teacher_template_run_result', db.template_console, broadcast=True)
+
+    @socketio.on('teacher_send_feedback')
+    def handle_teacher_send_feedback(data):
+        """Giáo viên gửi nhận xét trực tiếp tới một học sinh."""
+        target_ip = data.get('target_ip')
+        feedback = data.get('feedback', '').strip()
+        if db.update_student_feedback(target_ip, feedback):
+            # Gửi nhận xét cho máy học sinh
+            emit('teacher_feedback', {'feedback': feedback}, room=f"student_{target_ip}")
+            # Đồng bộ nhận xét tới toàn bộ các giáo viên khác (nếu có)
+            emit('student_feedback_sync', {'ip': target_ip, 'feedback': feedback}, room='teachers')
+
 
 

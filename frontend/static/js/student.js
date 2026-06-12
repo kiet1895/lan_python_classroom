@@ -102,6 +102,15 @@ function initSocketEvents() {
             stdinInput.value = student.stdin || "";
         }
         
+        // Hiển thị nhận xét từ giáo viên nếu có
+        if (student.feedback) {
+            showTeacherFeedback(student.feedback);
+        } else {
+            showTeacherFeedback("");
+        }
+        
+
+        
         initWorkspace();
         renderTabs();
     });
@@ -149,6 +158,15 @@ function initSocketEvents() {
         if (stdinInput) {
             stdinInput.value = data.stdin || "";
         }
+        
+        // Khôi phục phản hồi nhận xét của giáo viên
+        if (data.feedback) {
+            showTeacherFeedback(data.feedback);
+        } else {
+            showTeacherFeedback("");
+        }
+        
+
         
         initWorkspace();
         if (editor) {
@@ -229,6 +247,9 @@ function initSocketEvents() {
             errorSpan.textContent = data.stderr || "Chương trình kết thúc với mã lỗi.";
             consoleOutput.appendChild(errorSpan);
         }
+
+
+
         // Tự cuộn console xuống cuối
         const consoleBody = document.getElementById("student-console").querySelector(".console-body");
         consoleBody.scrollTop = consoleBody.scrollHeight;
@@ -394,6 +415,15 @@ function initSocketEvents() {
     socket.on("teacher_template_run_result", (data) => {
         teacherTemplateConsole = data;
         renderTeacherLiveConsole(data);
+    });
+
+    // Nhận lời nhận xét từ giáo viên
+    socket.on("teacher_feedback", (data) => {
+        const feedback = data.feedback || "";
+        showTeacherFeedback(feedback);
+        if (feedback) {
+            showToastNotification("Nhận xét từ Giáo viên", feedback);
+        }
     });
 }
 
@@ -1247,5 +1277,91 @@ function renderTeacherLiveConsole(data) {
         consoleBody.textContent = data.stderr || "Chương trình lỗi biên dịch/thực thi.";
     }
     consoleBody.scrollTop = consoleBody.scrollHeight;
+}
+
+// --------------------------------------------------------------------------
+// HÀM TIỆN ÍCH DÀNH CHO NHÓM 2 (CHẤM BÀI) & NHÓM 3 (TƯƠNG TÁC) HỌC SINH
+// --------------------------------------------------------------------------
+
+/* Hiển thị nhận xét của Giáo viên trên modal popup */
+function showTeacherFeedback(feedback) {
+    const modal = document.getElementById("feedback-modal");
+    const textEl = document.getElementById("feedback-modal-text");
+    if (!modal || !textEl) return;
+    
+    if (feedback && feedback.trim()) {
+        textEl.textContent = feedback;
+        modal.classList.remove("d-none");
+    } else {
+        modal.classList.add("d-none");
+        textEl.textContent = "";
+    }
+}
+
+/* Hiển thị thông báo nổi Toast Notification */
+function showToastNotification(title, message) {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "toast-container";
+        container.style.position = "fixed";
+        container.style.top = "20px";
+        container.style.right = "20px";
+        container.style.zIndex = "999999";
+        container.style.display = "flex";
+        container.style.flexDirection = "column";
+        container.style.gap = "10px";
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement("div");
+    toast.className = "toast-card glass-panel";
+    toast.style.background = "rgba(30, 41, 59, 0.85)";
+    toast.style.backdropFilter = "blur(12px)";
+    toast.style.border = "1px solid var(--warning)";
+    toast.style.borderLeft = "4px solid var(--warning)";
+    toast.style.padding = "12px 18px";
+    toast.style.borderRadius = "8px";
+    toast.style.color = "var(--color-text-main)";
+    toast.style.boxShadow = "0 10px 15px -3px rgba(0,0,0,0.5)";
+    toast.style.maxWidth = "320px";
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(50px)";
+    toast.style.transition = "all 0.3s ease";
+    
+    toast.innerHTML = `
+        <div style="font-weight: bold; font-size: 0.85rem; color: var(--warning); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-bell animate-bounce"></i> ${escapeHtml(title)}
+        </div>
+        <div style="font-size: 0.85rem; line-height: 1.4;">${escapeHtml(message)}</div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Kích hoạt transition
+    setTimeout(() => {
+        toast.style.opacity = "1";
+        toast.style.transform = "translateX(0)";
+    }, 50);
+    
+    // Tự động đóng sau 5 giây
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(50px)";
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+
+
+/* Escape chuỗi HTML tránh lỗi XSS hiển thị */
+function escapeHtml(text) {
+    if (!text) return "";
+    return text.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 

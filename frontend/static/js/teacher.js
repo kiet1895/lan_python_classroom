@@ -15,7 +15,6 @@ let teacherTemplateCode = "";
 let teacherTemplateStdin = "";
 let teacherTemplateConsole = null;
 
-
 let isFrozenGlobal = false;
 let examModeGlobal = false;
 
@@ -336,6 +335,7 @@ function initSocketEvents() {
             // Tự động cuộn xuống cuối
             consoleBody.scrollTop = consoleBody.scrollHeight;
         }
+
     });
 
     // Đồng bộ trạng thái chia sẻ bài học sinh từ máy chủ
@@ -401,6 +401,15 @@ function initSocketEvents() {
     socket.on("teacher_template_run_result", (data) => {
         teacherTemplateConsole = data;
         renderTemplateConsoleOutput(data);
+    });
+
+    // Đồng bộ nhận xét tới toàn bộ các giáo viên khác (nếu có)
+    socket.on("student_feedback_sync", (data) => {
+        const ip = data.ip;
+        const feedback = data.feedback;
+        if (students[ip]) {
+            students[ip].feedback = feedback;
+        }
     });
 }
 
@@ -530,7 +539,6 @@ function initUIEvents() {
         btnToggleAssignment.addEventListener("click", () => {
             if (assignmentDrawer.style.display === "none") {
                 assignmentDrawer.style.display = "block";
-                renderAssignmentStatus();
             } else {
                 assignmentDrawer.style.display = "none";
             }
@@ -544,6 +552,7 @@ function initUIEvents() {
         });
     }
 
+
     // Thiết lập dán hình ảnh trực tiếp từ clipboard vào textarea đề bài
     const assignTextContent = document.getElementById("assign-text-content");
     if (assignTextContent) {
@@ -552,38 +561,38 @@ function initUIEvents() {
             for (let index in items) {
                 const item = items[index];
                 if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
-                    const blob = item.getAsFile();
-                    const formData = new FormData();
-                    formData.append('file', blob, `pasted_image_${Date.now()}.png`);
-                    
-                    const startPos = assignTextContent.selectionStart;
-                    const endPos = assignTextContent.selectionEnd;
-                    const textVal = assignTextContent.value;
-                    const placeholder = "![Đang tải ảnh lên từ clipboard...]()";
-                    assignTextContent.value = textVal.substring(0, startPos) + placeholder + textVal.substring(endPos);
-                    
-                    fetch('/teacher/upload_image', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            assignTextContent.value = assignTextContent.value.replace(placeholder, `![Ảnh đã dán](${data.url})`);
-                        } else {
-                            assignTextContent.value = assignTextContent.value.replace(placeholder, `[Lỗi tải ảnh: ${data.message}]`);
-                        }
-                    })
-                    .catch(err => {
-                        assignTextContent.value = assignTextContent.value.replace(placeholder, `[Lỗi mạng khi tải ảnh]`);
-                    });
-                    e.preventDefault(); // Ngăn hành vi dán text mặc định
+                     const blob = item.getAsFile();
+                     const formData = new FormData();
+                     formData.append('file', blob, `pasted_image_${Date.now()}.png`);
+                     
+                     const startPos = assignTextContent.selectionStart;
+                     const endPos = assignTextContent.selectionEnd;
+                     const textVal = assignTextContent.value;
+                     const placeholder = "![Đang tải ảnh lên từ clipboard...]()";
+                     assignTextContent.value = textVal.substring(0, startPos) + placeholder + textVal.substring(endPos);
+                     
+                     fetch('/teacher/upload_image', {
+                         method: 'POST',
+                         body: formData
+                     })
+                     .then(res => res.json())
+                     .then(data => {
+                         if (data.success) {
+                             assignTextContent.value = assignTextContent.value.replace(placeholder, `![Ảnh đã dán](${data.url})`);
+                         } else {
+                             assignTextContent.value = assignTextContent.value.replace(placeholder, `[Lỗi tải ảnh: ${data.message}]`);
+                         }
+                     })
+                     .catch(err => {
+                         assignTextContent.value = assignTextContent.value.replace(placeholder, `[Lỗi mạng khi tải ảnh]`);
+                     });
+                     e.preventDefault(); // Ngăn hành vi dán text mặc định
                 }
             }
         });
     }
 
-    // Form gửi đề bài qua AJAX (Hỗ trợ mô tả + file đính kèm)
+    // Form gửi đề bài qua AJAX (Hỗ trợ mô tả + file đính kèm + testcases)
     const assignmentForm = document.getElementById("assignment-form");
     if (assignmentForm) {
         assignmentForm.addEventListener("submit", (e) => {
@@ -603,6 +612,7 @@ function initUIEvents() {
             if (fileInput && fileInput.files.length > 0) {
                 formData.append("file", fileInput.files[0]);
             }
+
             
             const btnPush = document.getElementById("btn-push-assignment");
             if (btnPush) {
@@ -663,6 +673,7 @@ function initUIEvents() {
             });
         });
     }
+
 }
 
 /* ==========================================================================
@@ -744,6 +755,7 @@ function renderStudentSlot(ip, student) {
             nameSpan.textContent = student.name;
             nameSpan.title = student.name;
         }
+
         
         // Cập nhật số lỗi rời tab
         const faultBadge = document.getElementById(`card-fault-${safeIp}`);
@@ -819,7 +831,7 @@ function renderStudentSlot(ip, student) {
     // Render markup đầy đủ
     slotCard.innerHTML = `
         <div class="card-header">
-            <div class="card-header-left">
+            <div class="card-header-left" style="display: flex; align-items: center;">
                 <div class="status-dot ${student.status === 'online' ? 'green' : 'red'}" id="card-dot-${safeIp}"></div>
                 <span class="card-student-name" title="${student.name}">${student.name}</span>
             </div>
@@ -839,7 +851,6 @@ function renderStudentSlot(ip, student) {
                 <span>Chế độ kiểm tra đang bật</span>
                 <span style="font-size: 0.75rem; color: var(--color-text-muted);">(Code học sinh đang được ẩn trên máy chiếu)</span>
             </div>
-            
             <div class="card-console" id="card-console-${safeIp}">
                 <div class="card-console-header">
                     <span>Console</span>
@@ -849,18 +860,21 @@ function renderStudentSlot(ip, student) {
                     <span class="card-console-stdin-label">
                         <i class="fa-solid fa-keyboard"></i> Input:
                     </span>
-                    <textarea id="card-stdin-${safeIp}" class="card-console-stdin-textarea" placeholder="Ví dụ:&#10;Kiet&#10;18" oninput="syncTeacherEditedStdin('${ip}')">${student.stdin || ""}</textarea>
+                    <textarea id="card-stdin-${safeIp}" class="card-console-stdin-textarea" placeholder="Dữ liệu đầu vào (Input)..." oninput="syncTeacherEditedStdin('${ip}')">${student.stdin || ""}</textarea>
                 </div>
                 <div class="card-console-body card-console-placeholder" id="card-console-body-${safeIp}">Chờ chạy thử...</div>
             </div>
         </div>
         <div class="card-footer">
             <span class="card-ip" title="${ip}">IP: ${ip} | Ô ${slotId}</span>
-            <div class="card-actions" style="display: flex; gap: 8px;">
-                <button class="btn btn-secondary btn-sm" id="btn-share-${safeIp}" style="padding: 6px 12px; font-size: 0.8rem;" onclick="toggleShareStudent('${ip}')" title="Chia sẻ bài làm này cho cả lớp xem">
+            <div class="card-actions" style="display: flex; gap: 6px; flex-wrap: wrap; width: 100%; justify-content: flex-end; margin-top: 5px;">
+                <button class="btn btn-secondary btn-sm" id="btn-feedback-${safeIp}" style="padding: 4px 8px; font-size: 0.75rem;" onclick="openFeedbackModal('${ip}')" title="Gửi lời nhận xét/phản hồi tới học sinh">
+                    <i class="fa-solid fa-comment-dots"></i> Nhận xét
+                </button>
+                <button class="btn btn-secondary btn-sm" id="btn-share-${safeIp}" style="padding: 4px 8px; font-size: 0.75rem;" onclick="toggleShareStudent('${ip}')" title="Chia sẻ bài làm này cho cả lớp xem">
                     <i class="fa-solid fa-share-nodes"></i> Chia sẻ bài
                 </button>
-                <button class="btn btn-indigo btn-sm" style="padding: 6px 12px; font-size: 0.8rem;" onclick="runStudentCode('${ip}')" title="Chạy chương trình của học sinh">
+                <button class="btn btn-indigo btn-sm" style="padding: 4px 8px; font-size: 0.75rem;" onclick="runStudentCode('${ip}')" title="Chạy chương trình của học sinh">
                     <i class="fa-solid fa-play"></i> Run Code
                 </button>
             </div>
@@ -1305,4 +1319,40 @@ function renderTemplateConsoleOutput(data) {
     }
     consoleBody.scrollTop = consoleBody.scrollHeight;
 }
+
+// --------------------------------------------------------------------------
+// HÀM TIỆN ÍCH DÀNH CHO NHÓM 2 (CHẤM BÀI & TIME-TRAVEL) & NHÓM 3 (TƯƠNG TÁC & THỐNG KÊ LỖI)
+// --------------------------------------------------------------------------
+
+
+
+/* Escape HTML để chèn an toàn */
+function escapeHtml(text) {
+    if (!text) return "";
+    return text.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+/* Giáo viên bấm nút Nhận xét gửi phản hồi tới học sinh */
+window.openFeedbackModal = function(ip) {
+    const student = students[ip];
+    if (!student) return;
+    const currentFeedback = student.feedback || "";
+    const msg = prompt(`Nhập lời nhận xét/phản hồi gửi tới ${student.name} (IP: ${ip}):`, currentFeedback);
+    if (msg !== null) {
+        const trimmed = msg.trim();
+        socket.emit("teacher_send_feedback", {
+            target_ip: ip,
+            feedback: trimmed
+        });
+        student.feedback = trimmed;
+        alert(`Đã gửi nhận xét thành công tới ${student.name}!`);
+    }
+};
+
+
 

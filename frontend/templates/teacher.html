@@ -60,6 +60,8 @@
                 <i class="fa-solid fa-eye-slash"></i> <span>Chế độ kiểm tra</span>
             </button>
             
+
+            
             <!-- Nút xuất báo cáo thu bài -->
             <a href="{{ url_for('export_code') }}" class="btn btn-success" id="btn-export" title="Tải xuống code của toàn bộ học sinh" style="flex: 1; max-width: 200px; justify-content: center; display: inline-flex; align-items: center;">
                 <i class="fa-solid fa-download"></i> <span>Thu bài (Export)</span>
@@ -97,6 +99,8 @@
                     </label>
                     <input type="file" id="assign-file-input" accept=".pdf,.png,.jpg,.jpeg,.gif" style="width: 100%; color: var(--color-text-main);">
                 </div>
+                
+
                 
                 <div class="drawer-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
                     <button type="submit" class="btn btn-primary" id="btn-push-assignment">
@@ -202,6 +206,8 @@
         </div>
     </div>
 </div>
+
+
 {% endblock %}
 
 {% block scripts %}
@@ -233,5 +239,5 @@
     });
 </script>
 <!-- Tải JavaScript xử lý logic của Giáo viên -->
-<script src="{{ url_for('static', filename='js/teacher.js') }}?v=9"></script>
+<script src="{{ url_for('static', filename='js/teacher.js') }}?v=10"></script>
 {% endblock %}

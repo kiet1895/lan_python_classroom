@@ -93,6 +93,8 @@
             </div>
         </header>
 
+
+ 
         <!-- Trình soạn thảo mã nguồn và Bảng in kết quả -->
         <main class="workspace-main" id="student-workspace-main">
             <div class="workspace-left">
@@ -115,20 +117,20 @@
                             <div class="stdin-pane-header">
                                 <i class="fa-solid fa-keyboard"></i> Dữ liệu đầu vào (Input):
                             </div>
-                            <div class="stdin-pane-desc">
-                                Nhập các dữ liệu cho hàm <code>input()</code> của chương trình, mỗi dòng tương ứng với một lần nhập (phím Enter).
-                            </div>
-                            <textarea id="student-stdin-input" placeholder="Ví dụ:&#10;Kiet&#10;18" class="student-stdin-textarea"></textarea>
+                            <textarea id="student-stdin-input" placeholder="Dữ liệu đầu vào (Input)..." class="student-stdin-textarea"></textarea>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Terminal console hiển thị kết quả chạy code từ xa -->
                 <div class="console-container glass-panel" id="student-console">
-                    <div class="console-header">
-                        <span><i class="fa-solid fa-terminal"></i> Bảng kết quả chạy code</span>
+                    <div class="console-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span><i class="fa-solid fa-terminal"></i> Bảng kết quả chạy code</span>
+                        </div>
                         <button class="btn-clear-console" id="btn-clear-console" title="Xóa bảng kết quả"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
+                    
                     <div class="console-body" id="console-output">
                         <span class="console-placeholder">Chờ giáo viên chạy chương trình của bạn... kết quả in ra sẽ xuất hiện ở đây.</span>
                     </div>
@@ -229,6 +231,22 @@
         </div>
     </div>
 
+    <!-- Modal nhận xét của Giáo viên (Teacher Feedback Modal) -->
+    <div class="modal-overlay d-none" id="feedback-modal" style="z-index: 99999;">
+        <div class="modal-card glass-panel" style="max-width: 450px; border-color: rgba(245, 158, 11, 0.3); box-shadow: 0 0 30px rgba(245, 158, 11, 0.2);">
+            <div class="modal-header" style="display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+                <i class="fa-solid fa-comment-dots" style="color: var(--warning); font-size: 1.5rem;"></i>
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--color-text-main); margin: 0;">NHẬN XÉT CỦA GIÁO VIÊN</h2>
+            </div>
+            <div class="modal-body" style="padding: 15px 0 0 0;">
+                <p id="feedback-modal-text" style="font-size: 0.95rem; color: var(--color-text-main); font-weight: 500; text-align: left; line-height: 1.6; white-space: pre-wrap; margin-bottom: 20px;"></p>
+                <div class="modal-actions" style="display: flex; justify-content: flex-end;">
+                    <button class="btn btn-warning" onclick="document.getElementById('feedback-modal').classList.add('d-none')" style="padding: 8px 20px; font-size: 0.9rem; color: #030712; font-weight: 700;">Đã rõ <i class="fa-solid fa-circle-check"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal nhập liệu / xác nhận tuỳ chỉnh (Custom Input/Confirm Modal) -->
     <div class="modal-overlay d-none" id="custom-dialog-modal" style="z-index: 99999;">
         <div class="modal-card glass-panel" style="max-width: 400px; border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);">
@@ -263,6 +281,6 @@
     window.CLASS_FROZEN = {% if is_frozen %}true{% else %}false{% endif %};
 </script>
 <!-- Tải JavaScript xử lý logic của Học sinh -->
-<script src="{{ url_for('static', filename='js/student.js') }}?v=9"></script>
+<script src="{{ url_for('static', filename='js/student.js') }}?v=10"></script>
 {% endif %}
 {% endblock %}

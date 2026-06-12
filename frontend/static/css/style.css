@@ -1965,5 +1965,38 @@ a:hover {
     background: rgba(239, 68, 68, 0.05);
 }
 
+/* ==========================================================================
+   STYLING FOR GROUP 2 & GROUP 3 FEATURES (TESTCASE, TIMELINE, ERROR STATS, FEEDBACK)
+   ========================================================================== */
+
+/* Testcase Badges & Accent colors */
+.badge-green {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+}
+.badge-yellow {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #fbbf24;
+}
+.badge-red {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+}
+
+/* ==========================================================================
+   STYLING FOR TEACHER FEEDBACK MODAL POPUP
+   ========================================================================== */
+
+#feedback-modal .modal-card {
+    background: rgba(24, 20, 10, 0.85) !important;
+    border: 1px solid rgba(245, 158, 11, 0.25) !important;
+    box-shadow: 0 20px 40px rgba(245, 158, 11, 0.15) !important;
+}
+
+
+
 
 
