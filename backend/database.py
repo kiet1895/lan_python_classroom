@@ -48,10 +48,6 @@ class Database:
             "file_name": ""       # Tên gốc của tệp đính kèm
         }
 
-        # Cấu hình bài tập chấm qua LQDOJ
-        self.lqdoj_problems = []
-        self.lqdoj_bridge_connected = False
-
     def set_capacity(self, num):
         """Thiết lập số lượng học sinh tối đa và làm mới toàn bộ cơ sở dữ liệu."""
         with self.lock:
@@ -73,8 +69,6 @@ class Database:
                 "file_type": "none",
                 "file_name": ""
             }
-            self.lqdoj_problems = []
-            self.lqdoj_bridge_connected = False
 
     def get_capacity(self):
         """Lấy số lượng học sinh tối đa đã thiết lập."""
@@ -101,8 +95,6 @@ class Database:
                     self.students[ip]["active_tab_id"] = "tab_default"
                 if "feedback" not in self.students[ip]:
                     self.students[ip]["feedback"] = ""
-                if "lqdoj_submissions" not in self.students[ip]:
-                    self.students[ip]["lqdoj_submissions"] = []
                 return self.students[ip]
             
             # 2. Kiểm tra xem lớp học đã được thiết lập chưa
@@ -135,8 +127,7 @@ class Database:
                 "status": "online",
                 "hand_raised": False,
                 "slot_id": available_slot,
-                "feedback": "",
-                "lqdoj_submissions": []
+                "feedback": ""
             }
             return self.students[ip]
 
@@ -156,8 +147,6 @@ class Database:
                     student["stdin"] = ""
                 if "feedback" not in student:
                     student["feedback"] = ""
-                if "lqdoj_submissions" not in student:
-                    student["lqdoj_submissions"] = []
             return student
 
     def update_code(self, ip, code):
@@ -212,8 +201,6 @@ class Database:
                     student["stdin"] = ""
                 if "feedback" not in student:
                     student["feedback"] = ""
-                if "lqdoj_submissions" not in student:
-                    student["lqdoj_submissions"] = []
             return dict(self.students)
 
     def reset_faults(self, ip):
@@ -378,54 +365,6 @@ class Database:
                 self.students[ip]["feedback"] = feedback
                 return True
             return False
-
-    # --------------------------------------------------------------------------
-    # QUẢN LÝ BÀI CHẤM LQDOJ (LQDOJ METHODS)
-    # --------------------------------------------------------------------------
-    def get_lqdoj_problems(self):
-        """Lấy danh sách các bài tập cấu hình từ LQDOJ."""
-        with self.lock:
-            return self.lqdoj_problems
-
-    def add_lqdoj_problem(self, problem_id, name, submit_url):
-        """Thêm một bài tập chấm bằng LQDOJ."""
-        with self.lock:
-            # Kiểm tra xem ID đã tồn tại chưa
-            for p in self.lqdoj_problems:
-                if p["id"] == problem_id:
-                    p["name"] = name
-                    p["submit_url"] = submit_url
-                    return self.lqdoj_problems
-            self.lqdoj_problems.append({
-                "id": problem_id,
-                "name": name,
-                "submit_url": submit_url
-            })
-            return self.lqdoj_problems
-
-    def delete_lqdoj_problem(self, problem_id):
-        """Xóa một bài tập chấm bằng LQDOJ."""
-        with self.lock:
-            self.lqdoj_problems = [p for p in self.lqdoj_problems if p["id"] != problem_id]
-            return self.lqdoj_problems
-
-    def add_lqdoj_submission(self, ip, problem_id, problem_name, status, score, testcases):
-        """Lưu lịch sử nộp bài LQDOJ của học sinh."""
-        with self.lock:
-            if ip in self.students:
-                submission = {
-                    "problem_id": problem_id,
-                    "problem_name": problem_name,
-                    "timestamp": time.time(),
-                    "status": status,
-                    "score": score,
-                    "testcases": testcases  # Danh sách trạng thái chi tiết của từng testcase
-                }
-                if "lqdoj_submissions" not in self.students[ip]:
-                    self.students[ip]["lqdoj_submissions"] = []
-                self.students[ip]["lqdoj_submissions"].append(submission)
-                return submission
-            return None
 
 # Khởi tạo đối tượng Database duy nhất (Singleton) dùng chung cho toàn ứng dụng
 db = Database()

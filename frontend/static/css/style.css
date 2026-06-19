@@ -83,40 +83,40 @@
    ========================================================================== */
 
 :root {
-    /* Mảng màu sắc cao cấp (Tailwind HSL-inspired) */
-    --bg-base: #030712;
-    --bg-surface: rgba(17, 24, 39, 0.65);
-    --bg-surface-hover: rgba(31, 41, 55, 0.8);
-    --border-color: rgba(255, 255, 255, 0.08);
-    --border-hover: rgba(255, 255, 255, 0.15);
+    /* Mảng màu sắc cao cấp pastel sáng thân thiện học sinh tiểu học */
+    --bg-base: #FCFBF7;         /* Trắng kem ấm áp */
+    --bg-surface: rgba(255, 255, 255, 0.9); /* Trắng nổi bật trên nền kem */
+    --bg-surface-hover: rgba(255, 255, 255, 0.98);
+    --border-color: rgba(7, 59, 76, 0.08);  /* Viền xám xanh lục đậm dịu mắt */
+    --border-hover: rgba(7, 59, 76, 0.18);
     
-    --color-text-main: #f3f4f6;
-    --color-text-muted: #9ca3af;
+    --color-text-main: #073B4C;   /* Xanh dương đậm - Đọc rất rõ ràng và dịu mắt */
+    --color-text-muted: #118AB2;  /* Xanh dương trung */
     
-    --primary: #6366f1;         /* Indigo */
-    --primary-hover: #4f46e5;
-    --primary-glow: rgba(99, 102, 241, 0.35);
+    --primary: #118AB2;         /* Xanh dương pastel sáng làm CTA chính */
+    --primary-hover: #073B4C;
+    --primary-glow: rgba(17, 138, 178, 0.15);
     
-    --success: #10b981;         /* Emerald */
-    --success-hover: #059669;
-    --success-glow: rgba(16, 185, 129, 0.3);
+    --success: #06D6A0;         /* Xanh ngọc chủ đạo */
+    --success-hover: #05b386;
+    --success-glow: rgba(6, 214, 160, 0.15);
     
-    --warning: #f59e0b;         /* Amber */
-    --warning-hover: #d97706;
-    --warning-glow: rgba(245, 158, 11, 0.3);
+    --warning: #FFD166;         /* Cam Pastel */
+    --warning-hover: #f4be47;
+    --warning-glow: rgba(255, 209, 102, 0.2);
     
-    --danger: #ef4444;          /* Rose */
-    --danger-hover: #dc2626;
-    --danger-glow: rgba(239, 68, 68, 0.3);
+    --danger: #EF476F;          /* Đỏ đô/hồng cho lỗi/cảnh báo */
+    --danger-hover: #dc355b;
+    --danger-glow: rgba(239, 71, 111, 0.15);
     
-    --indigo-light: #818cf8;
-    --purple-light: #a78bfa;
+    --indigo-light: #118AB2;
+    --purple-light: #FFD166;
     
     /* Hiệu ứng chuyển động */
     --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
-    /* Font chữ mặc định (Bổ sung bộ font hệ thống chất lượng cao hỗ trợ đầy đủ tiếng Việt phòng khi mất kết nối Internet) */
+    /* Font chữ mặc định */
     --font-ui: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-code: 'JetBrains Mono', "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
@@ -135,9 +135,9 @@ body {
     font-family: var(--font-ui);
     background-color: var(--bg-base);
     background-image: 
-        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(167, 139, 250, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(3, 7, 18, 1) 0%, rgba(3, 7, 18, 0.95) 100%);
+        radial-gradient(circle at 10% 20%, rgba(6, 214, 160, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 90% 10%, rgba(255, 209, 102, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 50% 80%, rgba(17, 138, 178, 0.08) 0%, transparent 60%);
     background-attachment: fixed;
     color: var(--color-text-main);
     min-height: 100vh;
@@ -160,7 +160,7 @@ a {
     transition: var(--transition-fast);
 }
 a:hover {
-    color: var(--purple-light);
+    color: var(--primary-hover);
 }
 
 /* ==========================================================================
@@ -169,16 +169,17 @@ a:hover {
 
 .glass-panel {
     background: var(--bg-surface);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    border-radius: 14px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 2px solid var(--border-color);
+    box-shadow: 0 8px 24px 0 rgba(7, 59, 76, 0.05);
+    border-radius: 16px;
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .glass-panel:hover {
     border-color: var(--border-hover);
+    box-shadow: 0 12px 30px 0 rgba(7, 59, 76, 0.08);
 }
 
 /* Utility classes */
@@ -220,66 +221,67 @@ a:hover {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--purple-light));
-    box-shadow: 0 4px 15px var(--primary-glow);
+    background: linear-gradient(135deg, var(--primary), #073B4C);
+    box-shadow: 0 4px 12px var(--primary-glow);
 }
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--primary-hover), var(--primary));
-    box-shadow: 0 6px 20px var(--primary-glow);
+    background: linear-gradient(135deg, #073B4C, var(--primary));
+    box-shadow: 0 6px 16px var(--primary-glow);
 }
 
 .btn-warning {
-    background: linear-gradient(135deg, var(--warning), #f59e0b);
-    box-shadow: 0 4px 15px var(--warning-glow);
-    color: #030712;
+    background: linear-gradient(135deg, var(--warning), #f5b041);
+    box-shadow: 0 4px 12px var(--warning-glow);
+    color: #073B4C !important; /* Đảm bảo chữ tương phản rõ nét trên nền cam pastel */
 }
 .btn-warning:hover {
-    background: linear-gradient(135deg, #d97706, var(--warning));
-    box-shadow: 0 6px 20px var(--warning-glow);
+    background: linear-gradient(135deg, #f5b041, var(--warning));
+    box-shadow: 0 6px 16px var(--warning-glow);
 }
 
 .btn-success {
-    background: linear-gradient(135deg, var(--success), #34d399);
-    box-shadow: 0 4px 15px var(--success-glow);
+    background: linear-gradient(135deg, var(--success), #05b386);
+    box-shadow: 0 4px 12px var(--success-glow);
+    color: #fff !important;
 }
 .btn-success:hover {
-    background: linear-gradient(135deg, var(--success-hover), var(--success));
-    box-shadow: 0 6px 20px var(--success-glow);
+    background: linear-gradient(135deg, #05b386, var(--success));
+    box-shadow: 0 6px 16px var(--success-glow);
 }
 
 .btn-indigo {
-    background: linear-gradient(135deg, #4f46e5, var(--primary));
-    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
+    background: linear-gradient(135deg, #073B4C, var(--primary));
+    box-shadow: 0 4px 12px rgba(7, 59, 76, 0.15);
 }
 .btn-indigo:hover {
-    background: linear-gradient(135deg, #4338ca, #4f46e5);
+    background: linear-gradient(135deg, var(--primary), #073B4C);
 }
 
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(7, 59, 76, 0.06);
     border: 1px solid var(--border-color);
     color: var(--color-text-main);
 }
 .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(7, 59, 76, 0.12);
     border-color: var(--border-hover);
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, var(--danger), #f87171);
-    box-shadow: 0 4px 15px var(--danger-glow);
+    background: linear-gradient(135deg, var(--danger), #dc355b);
+    box-shadow: 0 4px 12px var(--danger-glow);
 }
 .btn-danger:hover {
-    background: linear-gradient(135deg, var(--danger-hover), var(--danger));
+    background: linear-gradient(135deg, #dc355b, var(--danger));
 }
 
 .btn-danger-outline {
     background: transparent;
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    color: #ef4444;
+    border: 1px solid rgba(239, 71, 111, 0.4);
+    color: #EF476F;
 }
 .btn-danger-outline:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 71, 111, 0.1);
     border-color: var(--danger);
 }
 
@@ -306,27 +308,27 @@ a:hover {
 }
 
 .badge-indigo {
-    background: rgba(99, 102, 241, 0.15);
-    color: #a5b4fc;
-    border: 1px solid rgba(99, 102, 241, 0.3);
+    background: rgba(17, 138, 178, 0.12);
+    color: #073B4C;
+    border: 1px solid rgba(17, 138, 178, 0.25);
 }
 
 .badge-green {
-    background: rgba(16, 185, 129, 0.15);
-    color: #6ee7b7;
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    background: rgba(6, 214, 160, 0.12);
+    color: #059669;
+    border: 1px solid rgba(6, 214, 160, 0.25);
 }
 
 .badge-red {
-    background: rgba(239, 68, 68, 0.15);
-    color: #fca5a5;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: rgba(239, 71, 111, 0.12);
+    color: #EF476F;
+    border: 1px solid rgba(239, 71, 111, 0.25);
 }
 
 .badge-url {
-    background: rgba(99, 102, 241, 0.15);
-    color: #a5b4fc;
-    border: 1px solid rgba(99, 102, 241, 0.4);
+    background: rgba(17, 138, 178, 0.08);
+    color: #073B4C;
+    border: 1px solid rgba(17, 138, 178, 0.3);
     cursor: pointer;
     font-weight: 600;
     text-transform: none !important;
@@ -345,9 +347,9 @@ a:hover {
 }
 
 .badge-url:hover {
-    background: rgba(99, 102, 241, 0.25);
-    border-color: rgba(99, 102, 241, 0.7);
-    color: #e0e7ff;
+    background: rgba(17, 138, 178, 0.16);
+    border-color: rgba(17, 138, 178, 0.6);
+    color: #073B4C;
 }
 
 /* Input Styles */
@@ -366,11 +368,11 @@ a:hover {
 }
 
 .input-group input {
-    background: rgba(17, 24, 39, 0.8);
+    background: #ffffff;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 12px 16px;
-    color: #fff;
+    color: var(--color-text-main);
     font-family: var(--font-ui);
     font-size: 1rem;
     outline: none;
@@ -409,7 +411,7 @@ a:hover {
     font-size: 3rem;
     color: var(--primary);
     margin-bottom: 15px;
-    filter: drop-shadow(0 0 10px var(--primary-glow));
+    filter: drop-shadow(0 4px 8px var(--primary-glow));
 }
 
 .login-header h2 {
@@ -417,7 +419,7 @@ a:hover {
     font-weight: 800;
     letter-spacing: 0.05em;
     margin-bottom: 8px;
-    background: linear-gradient(to right, var(--indigo-light), var(--purple-light));
+    background: linear-gradient(to right, var(--primary), var(--warning-hover));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -428,10 +430,10 @@ a:hover {
 }
 
 .error-banner {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: rgba(239, 71, 111, 0.1);
+    border: 1px solid rgba(239, 71, 111, 0.25);
     border-radius: 8px;
-    color: #f87171;
+    color: var(--danger);
     padding: 10px 14px;
     font-size: 0.9rem;
     display: flex;
@@ -478,13 +480,13 @@ a:hover {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: rgba(99, 102, 241, 0.2);
-    border: 1px solid rgba(99, 102, 241, 0.4);
+    background: rgba(17, 138, 178, 0.15);
+    border: 1px solid rgba(17, 138, 178, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.2rem;
-    color: var(--indigo-light);
+    color: var(--primary);
 }
 
 .student-meta h3 {
@@ -535,12 +537,12 @@ a:hover {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.25);
+    background: rgba(239, 71, 111, 0.1);
+    border: 1px solid rgba(239, 71, 111, 0.25);
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 0.85rem;
-    color: #f87171;
+    color: var(--danger);
 }
 
 /* Workspace chính */
@@ -564,7 +566,7 @@ a:hover {
     align-items: center;
     justify-content: space-between;
     padding: 10px 20px;
-    background: rgba(3, 7, 18, 0.4);
+    background: rgba(7, 59, 76, 0.03);
     border-bottom: 1px solid var(--border-color);
     font-family: var(--font-code);
     font-size: 0.85rem;
@@ -588,7 +590,7 @@ a:hover {
 .editor-stdin-pane {
     width: 250px;
     border-left: 1px solid var(--border-color);
-    background: rgba(3, 7, 18, 0.2);
+    background: rgba(7, 59, 76, 0.02);
     display: flex;
     flex-direction: column;
     padding: 12px 16px;
@@ -616,7 +618,7 @@ a:hover {
 .student-stdin-textarea {
     flex: 1;
     width: 100%;
-    background: rgba(0, 0, 0, 0.35);
+    background: #ffffff;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 10px 12px;
@@ -643,9 +645,64 @@ a:hover {
     font-family: var(--font-code);
     font-size: 1rem;
     line-height: 1.6;
-    background: rgba(15, 23, 42, 0.25) !important;
+    background: #FFFFFF !important;
+    color: #073B4C !important;
     font-variant-ligatures: none;
     font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Đè giao diện Dracula thành giao diện sáng pastel cho học sinh */
+.cm-s-dracula.CodeMirror {
+    background: #FFFFFF !important;
+    color: #073B4C !important;
+}
+.cm-s-dracula .CodeMirror-gutters {
+    background: #FAF9F6 !important;
+    border-right: 1px solid rgba(7, 59, 76, 0.08) !important;
+}
+.cm-s-dracula .CodeMirror-linenumber {
+    color: #94A3B8 !important;
+}
+.cm-s-dracula .CodeMirror-cursor {
+    border-left: 2px solid #073B4C !important;
+}
+.cm-s-dracula .CodeMirror-selected {
+    background: rgba(255, 209, 102, 0.3) !important;
+}
+.cm-s-dracula span.cm-comment {
+    color: #06D6A0 !important;
+    font-style: italic;
+}
+.cm-s-dracula span.cm-keyword, 
+.cm-s-dracula span.cm-builtin {
+    color: #EF476F !important;
+    font-weight: bold;
+}
+.cm-s-dracula span.cm-string,
+.cm-s-dracula span.cm-string-2 {
+    color: #118AB2 !important;
+}
+.cm-s-dracula span.cm-number {
+    color: #e28704 !important;
+    font-weight: 600;
+}
+.cm-s-dracula span.cm-operator {
+    color: #073B4C !important;
+}
+.cm-s-dracula span.cm-variable,
+.cm-s-dracula span.cm-variable-2,
+.cm-s-dracula span.cm-variable-3,
+.cm-s-dracula span.cm-def {
+    color: #073B4C !important;
+}
+.cm-s-dracula span.cm-property {
+    color: #118AB2 !important;
+}
+.cm-s-dracula span.cm-atom {
+    color: #EF476F !important;
+}
+.cm-s-dracula .CodeMirror-activeline-background {
+    background: rgba(17, 138, 178, 0.04) !important;
 }
 
 /* Chặn chọn/copy số dòng trong CodeMirror */
@@ -672,7 +729,7 @@ a:hover {
     align-items: center;
     justify-content: space-between;
     padding: 8px 20px;
-    background: rgba(3, 7, 18, 0.5);
+    background: rgba(7, 59, 76, 0.04);
     border-bottom: 1px solid var(--border-color);
     font-size: 0.85rem;
     font-weight: 600;
@@ -693,23 +750,23 @@ a:hover {
 .console-body {
     flex: 1;
     padding: 12px 20px;
-    background: #020617;
+    background: #F1F5F9;
     font-family: var(--font-code);
     font-size: 0.9rem;
     overflow-y: auto;
-    color: #38bdf8;
+    color: #073B4C;
     white-space: pre-wrap;
     font-variant-ligatures: none;
     font-feature-settings: "liga" 0, "calt" 0;
 }
 
 .console-placeholder {
-    color: #4b5563;
+    color: #64748b;
     font-style: italic;
 }
 
 .console-error {
-    color: #f87171;
+    color: var(--danger);
 }
 
 /* ==========================================================================
@@ -722,9 +779,9 @@ a:hover {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(2, 6, 23, 0.8);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(7, 59, 76, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 99999;
     display: flex;
     align-items: center;
@@ -735,15 +792,15 @@ a:hover {
 .freeze-card {
     max-width: 450px;
     padding: 45px 30px;
-    border-color: rgba(239, 68, 68, 0.25);
-    box-shadow: 0 0 50px rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 71, 111, 0.25) !important;
+    box-shadow: 0 16px 36px rgba(239, 71, 111, 0.12) !important;
 }
 
 .freeze-icon {
     font-size: 4rem;
     color: var(--danger);
     margin-bottom: 25px;
-    filter: drop-shadow(0 0 15px var(--danger-glow));
+    filter: drop-shadow(0 4px 8px var(--danger-glow));
 }
 
 .freeze-card h2 {
@@ -751,18 +808,18 @@ a:hover {
     font-weight: 800;
     letter-spacing: 0.05em;
     margin-bottom: 12px;
-    color: #ef4444;
+    color: var(--danger);
 }
 
 .freeze-card p {
-    color: var(--color-text-muted);
+    color: var(--color-text-main);
     font-size: 0.95rem;
     margin-bottom: 25px;
 }
 
 .freeze-spinner {
     font-size: 0.9rem;
-    color: var(--indigo-light);
+    color: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -814,7 +871,7 @@ a:hover {
     align-items: center;
     gap: 12px;
     width: 100%;
-    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    border-top: 1px dashed rgba(7, 59, 76, 0.12);
     padding-top: 12px;
     margin-top: 4px;
 }
@@ -829,13 +886,13 @@ a:hover {
 .brand-logo i {
     font-size: 1.6rem;
     color: var(--primary);
-    filter: drop-shadow(0 0 6px var(--primary-glow));
+    filter: drop-shadow(0 4px 8px var(--primary-glow));
 }
 .brand-logo h1 {
     font-size: 1.3rem;
     font-weight: 800;
     letter-spacing: 0.05em;
-    background: linear-gradient(to right, var(--indigo-light), var(--purple-light));
+    background: linear-gradient(to right, var(--primary), var(--warning-hover));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     white-space: nowrap;
@@ -969,15 +1026,15 @@ a:hover {
     justify-content: center;
     padding: 40px 20px;
     border-style: dashed;
-    border-color: rgba(255, 255, 255, 0.15);
-    background: rgba(17, 24, 39, 0.2);
-    color: var(--color-text-muted);
+    border-color: rgba(7, 59, 76, 0.18) !important;
+    background: rgba(255, 255, 255, 0.45);
+    color: var(--color-text-main);
     min-height: 250px;
 }
 
 .empty-slot-icon {
     font-size: 2.2rem;
-    color: rgba(255, 255, 255, 0.15);
+    color: rgba(7, 59, 76, 0.18);
     margin-bottom: 12px;
 }
 
@@ -997,12 +1054,12 @@ a:hover {
 }
 
 .student-card:hover {
-    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    box-shadow: 0 10px 25px rgba(7, 59, 76, 0.08);
 }
 
 .student-card.card-hand-raised {
     border-color: var(--warning);
-    box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 20px rgba(255, 209, 102, 0.25);
     animation: grid-card-pulse 2s infinite alternate;
 }
 
@@ -1016,7 +1073,7 @@ a:hover {
     align-items: center;
     justify-content: space-between;
     padding: 10px 18px;
-    background: rgba(3, 7, 18, 0.4);
+    background: rgba(7, 59, 76, 0.03);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -1048,9 +1105,9 @@ a:hover {
 }
 
 .card-fault-indicator {
-    background: rgba(239, 68, 68, 0.1);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: rgba(239, 71, 111, 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 71, 111, 0.25);
     padding: 2px 8px;
     border-radius: 6px;
     font-size: 0.8rem;
@@ -1060,7 +1117,7 @@ a:hover {
 .card-fault-indicator.warning-high {
     background: var(--danger);
     color: #fff;
-    box-shadow: 0 0 10px var(--danger-glow);
+    box-shadow: 0 4px 10px var(--danger-glow);
 }
 
 /* Nội dung editor ô học sinh */
@@ -1117,7 +1174,7 @@ a:hover {
     left: 0;
     right: 0;
     height: 170px;
-    background: #020617;
+    background: #F1F5F9;
     border-top: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
@@ -1131,8 +1188,8 @@ a:hover {
     align-items: center;
     justify-content: space-between;
     padding: 4px 12px;
-    background: rgba(3, 7, 18, 0.6);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    background: rgba(7, 59, 76, 0.04);
+    border-bottom: 1px solid var(--border-color);
     color: var(--color-text-muted);
     font-weight: 600;
 }
@@ -1141,18 +1198,18 @@ a:hover {
     flex: 1;
     padding: 6px 12px;
     overflow-y: auto;
-    color: #34d399;
+    color: #073B4C;
     white-space: pre-wrap;
     font-variant-ligatures: none;
     font-feature-settings: "liga" 0, "calt" 0;
 }
 
 .card-console-body.error {
-    color: #f87171;
+    color: var(--danger);
 }
 
 .card-console-placeholder {
-    color: #3b4252;
+    color: #64748b;
     font-style: italic;
 }
 
@@ -1160,8 +1217,8 @@ a:hover {
     display: flex;
     flex-direction: column;
     padding: 6px 12px;
-    background: rgba(3, 7, 18, 0.25);
-    border-bottom: 1px solid rgba(255,255,255,0.03);
+    background: rgba(7, 59, 76, 0.02);
+    border-bottom: 1px solid var(--border-color);
     gap: 4px;
 }
 
@@ -1177,8 +1234,8 @@ a:hover {
 .card-console-stdin-textarea {
     width: 100%;
     height: 48px;
-    background: rgba(0,0,0,0.25);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: #ffffff;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 4px 8px;
     font-family: var(--font-code);
@@ -1194,7 +1251,7 @@ a:hover {
     align-items: center;
     justify-content: space-between;
     padding: 8px 18px;
-    background: rgba(3, 7, 18, 0.4);
+    background: rgba(7, 59, 76, 0.03);
     border-top: 1px solid var(--border-color);
 }
 
@@ -1214,9 +1271,9 @@ a:hover {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(2, 6, 23, 0.75);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    background: rgba(7, 59, 76, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 9999;
     display: flex;
     align-items: center;
@@ -1228,7 +1285,9 @@ a:hover {
     width: 100%;
     max-width: 480px;
     padding: 35px;
-    border-color: rgba(99, 102, 241, 0.2);
+    border: 2px solid var(--border-color) !important;
+    background: #FCFBF7 !important;
+    box-shadow: 0 16px 36px rgba(7, 59, 76, 0.12) !important;
 }
 
 .modal-header h2 {
@@ -1237,7 +1296,7 @@ a:hover {
     letter-spacing: 0.05em;
     margin-bottom: 20px;
     text-align: center;
-    background: linear-gradient(to right, var(--indigo-light), var(--purple-light));
+    background: linear-gradient(to right, var(--primary), var(--warning-hover));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -1298,14 +1357,14 @@ a:hover {
     height: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: rgba(3, 7, 18, 0.3);
+    background: rgba(7, 59, 76, 0.03);
 }
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(7, 59, 76, 0.15);
     border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(7, 59, 76, 0.3);
 }
 
 /* ==========================================================================
@@ -1323,9 +1382,9 @@ a:hover {
 /* Thanh resizer chia màn hình */
 .workspace-resizer {
     width: 6px;
-    background: rgba(255, 255, 255, 0.03);
-    border-left: 1px solid rgba(255, 255, 255, 0.05);
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(7, 59, 76, 0.03);
+    border-left: 1px solid rgba(7, 59, 76, 0.05);
+    border-right: 1px solid rgba(7, 59, 76, 0.05);
     cursor: col-resize;
     position: relative;
     z-index: 100;
@@ -1342,16 +1401,16 @@ a:hover {
     transform: translate(-50%, -50%);
     width: 2px;
     height: 30px;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(7, 59, 76, 0.2);
     border-radius: 1px;
     transition: background 0.2s;
 }
 .workspace-resizer:hover, .workspace-resizer.dragging {
-    background: rgba(99, 102, 241, 0.3);
-    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(17, 138, 178, 0.3);
+    border-color: rgba(17, 138, 178, 0.5);
 }
 .workspace-resizer:hover::after, .workspace-resizer.dragging::after {
-    background: #a5b4fc;
+    background: #073B4C;
 }
 
 .workspace-left {
@@ -1372,7 +1431,7 @@ a:hover {
     display: flex;
     align-items: center;
     padding: 10px 20px;
-    background: rgba(3, 7, 18, 0.4);
+    background: rgba(7, 59, 76, 0.03);
     border-bottom: 1px solid var(--border-color);
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
@@ -1382,7 +1441,7 @@ a:hover {
     font-size: 0.95rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: var(--warning);
+    color: var(--color-text-main);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1395,7 +1454,7 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    background: rgba(3, 7, 18, 0.2);
+    background: rgba(7, 59, 76, 0.02);
 }
 
 .shared-student-card {
@@ -1403,16 +1462,16 @@ a:hover {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(17, 24, 39, 0.85);
+    border: 1px solid var(--border-color);
+    background: #ffffff;
 }
 
 .shared-card-header {
     display: flex;
     align-items: center;
     padding: 6px 12px;
-    background: rgba(3, 7, 18, 0.5);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    background: rgba(7, 59, 76, 0.04);
+    border-bottom: 1px solid var(--border-color);
     font-size: 0.82rem;
 }
 
@@ -1455,8 +1514,8 @@ a:hover {
 .search-box-container {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(7, 59, 76, 0.03);
+    border: 1px solid rgba(7, 59, 76, 0.12);
     border-radius: 8px;
     padding: 6px 12px;
     gap: 8px;
@@ -1466,8 +1525,8 @@ a:hover {
 
 .search-box-container:focus-within {
     border-color: var(--primary);
-    box-shadow: 0 0 10px var(--primary-glow);
-    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 10px var(--primary-glow);
+    background: #ffffff;
 }
 
 .search-icon {
@@ -1477,7 +1536,7 @@ a:hover {
 }
 
 .search-box-container:focus-within .search-icon {
-    color: var(--indigo-light);
+    color: var(--primary);
 }
 
 .search-input {
@@ -1501,7 +1560,7 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(17, 24, 39, 0.4);
+    background: rgba(7, 59, 76, 0.03);
     border-bottom: 1px solid var(--border-color);
     padding: 5px 12px 0 12px;
     border-radius: 12px 12px 0 0;
@@ -1525,7 +1584,7 @@ a:hover {
 .editor-tab {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(7, 59, 76, 0.02);
     border: 1px solid var(--border-color);
     border-bottom: none;
     border-radius: 6px 6px 0 0;
@@ -1540,16 +1599,16 @@ a:hover {
 }
 
 .editor-tab:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(7, 59, 76, 0.05);
     color: var(--color-text-main);
 }
 
 .editor-tab.active {
     background: var(--bg-surface);
     color: var(--color-text-main);
-    border-color: rgba(99, 102, 241, 0.4) rgba(99, 102, 241, 0.4) transparent rgba(99, 102, 241, 0.4);
+    border-color: rgba(17, 138, 178, 0.25) rgba(17, 138, 178, 0.25) transparent rgba(17, 138, 178, 0.25);
     border-top-color: var(--primary);
-    box-shadow: 0 -2px 10px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 -2px 10px rgba(17, 138, 178, 0.05);
 }
 
 .tab-title {
@@ -1584,7 +1643,7 @@ a:hover {
 }
 
 .btn-add-tab:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(7, 59, 76, 0.06);
     color: var(--color-text-main);
 }
 
@@ -1599,7 +1658,7 @@ a:hover {
     display: flex;
     gap: 4px;
     padding: 6px 12px;
-    background: rgba(3, 7, 18, 0.25);
+    background: rgba(7, 59, 76, 0.03);
     border-bottom: 1px solid var(--border-color);
     overflow-x: auto;
     scrollbar-width: none;
@@ -1610,7 +1669,7 @@ a:hover {
 }
 
 .card-tab-btn {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(7, 59, 76, 0.02);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 3px 8px;
@@ -1625,7 +1684,7 @@ a:hover {
 }
 
 .card-tab-btn:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(7, 59, 76, 0.06);
     color: var(--color-text-main);
 }
 
@@ -1633,13 +1692,13 @@ a:hover {
     background: var(--primary);
     color: #ffffff;
     border-color: var(--primary);
-    box-shadow: 0 0 6px var(--primary-glow);
+    box-shadow: 0 4px 10px var(--primary-glow);
 }
 
 .card-tab-btn.student-active:not(.active) {
-    border-color: var(--warning);
-    color: var(--warning);
-    background: rgba(245, 158, 11, 0.05);
+    border-color: #f5b041;
+    color: #e28704;
+    background: rgba(255, 209, 102, 0.1);
 }
 
 /* ==========================================================================
@@ -1647,7 +1706,7 @@ a:hover {
    ========================================================================== */
 .right-pane-header-tabs {
     display: flex;
-    background: rgba(17, 24, 39, 0.4);
+    background: rgba(7, 59, 76, 0.03);
     border-bottom: 1px solid var(--border-color);
     padding: 5px 12px 0 12px;
     border-radius: 12px 12px 0 0;
@@ -1655,7 +1714,7 @@ a:hover {
 }
 
 .pane-tab {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(7, 59, 76, 0.02);
     border: 1px solid var(--border-color);
     border-bottom: none;
     border-radius: 6px 6px 0 0;
@@ -1672,16 +1731,16 @@ a:hover {
 }
 
 .pane-tab:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(7, 59, 76, 0.05);
     color: var(--color-text-main);
 }
 
 .pane-tab.active {
     background: var(--bg-surface);
     color: var(--color-text-main);
-    border-color: rgba(99, 102, 241, 0.4) rgba(99, 102, 241, 0.4) transparent rgba(99, 102, 241, 0.4);
+    border-color: rgba(17, 138, 178, 0.25) rgba(17, 138, 178, 0.25) transparent rgba(17, 138, 178, 0.25);
     border-top-color: var(--primary);
-    box-shadow: 0 -2px 10px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 -2px 10px rgba(17, 138, 178, 0.05);
 }
 
 .badge-red {
@@ -1745,27 +1804,27 @@ a:hover {
 .assignment-description-view {
     font-size: 0.95rem;
     line-height: 1.65;
-    color: #e5e7eb;
+    color: var(--color-text-main);
     margin-bottom: 20px;
     word-break: break-word;
 }
 .assignment-description-view h1 { 
     font-size: 1.4rem; 
     margin: 15px 0 10px 0; 
-    color: #fff; 
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+    color: #073B4C; 
+    border-bottom: 1px solid rgba(7, 59, 76, 0.15); 
     padding-bottom: 5px; 
 }
-.assignment-description-view h2 { font-size: 1.2rem; margin: 12px 0 8px 0; color: #fff; }
-.assignment-description-view h3 { font-size: 1.05rem; margin: 10px 0 6px 0; color: #fff; }
-.assignment-description-view strong { color: var(--warning); font-weight: 700; }
+.assignment-description-view h2 { font-size: 1.2rem; margin: 12px 0 8px 0; color: #073B4C; }
+.assignment-description-view h3 { font-size: 1.05rem; margin: 10px 0 6px 0; color: #073B4C; }
+.assignment-description-view strong { color: var(--danger); font-weight: 700; }
 .assignment-description-view ul { margin: 8px 0; padding-left: 20px; }
 .assignment-description-view li { margin: 4px 0; }
 .assignment-inline-image {
     max-width: 100%;
     border-radius: 8px;
     margin: 10px 0;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(7, 59, 76, 0.1);
     cursor: pointer;
     transition: transform 0.2s;
 }
@@ -1858,7 +1917,7 @@ a:hover {
 
 #template-stdin-input {
     height: 100px;
-    background: rgba(0, 0, 0, 0.25);
+    background: #ffffff;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--color-text-main);
@@ -1871,25 +1930,25 @@ a:hover {
 }
 
 #template-stdin-input:focus {
-    border-color: rgba(99, 102, 241, 0.6);
+    border-color: var(--primary);
 }
 
 #template-console-output {
     height: 100px;
     overflow-y: auto;
-    background: rgba(0, 0, 0, 0.3);
+    background: #F1F5F9;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 8px 10px;
     font-family: var(--font-code);
     font-size: 0.85rem;
     white-space: pre-wrap;
-    color: #e5e7eb;
+    color: #073B4C;
 }
 
 #template-console-output.error {
     color: var(--danger);
-    background: rgba(239, 68, 68, 0.05);
+    background: rgba(239, 71, 111, 0.05);
 }
 
 /* Student Live Template tab styling */
@@ -1942,7 +2001,7 @@ a:hover {
 
 #teacher-live-stdin {
     flex: 1;
-    background: rgba(0, 0, 0, 0.25);
+    background: #ffffff;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--color-text-main);
@@ -1955,25 +2014,25 @@ a:hover {
 }
 
 #teacher-live-stdin:focus {
-    border-color: rgba(99, 102, 241, 0.6);
+    border-color: var(--primary);
 }
 
 #teacher-live-console-output {
     flex: 1;
     overflow-y: auto;
-    background: rgba(0, 0, 0, 0.3);
+    background: #F1F5F9;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 8px 10px;
     font-family: var(--font-code);
     font-size: 0.85rem;
     white-space: pre-wrap;
-    color: #e5e7eb;
+    color: #073B4C;
 }
 
 #teacher-live-console-output.error {
     color: var(--danger);
-    background: rgba(239, 68, 68, 0.05);
+    background: rgba(239, 71, 111, 0.05);
 }
 
 /* ==========================================================================
@@ -1982,19 +2041,19 @@ a:hover {
 
 /* Testcase Badges & Accent colors */
 .badge-green {
-    background: rgba(16, 185, 129, 0.15);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    color: #34d399;
+    background: rgba(6, 214, 160, 0.12);
+    border: 1px solid rgba(6, 214, 160, 0.25);
+    color: #059669;
 }
 .badge-yellow {
-    background: rgba(245, 158, 11, 0.15);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-    color: #fbbf24;
+    background: rgba(255, 209, 102, 0.12);
+    border: 1px solid rgba(255, 209, 102, 0.25);
+    color: #e28704;
 }
 .badge-red {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #f87171;
+    background: rgba(239, 71, 111, 0.12);
+    border: 1px solid rgba(239, 71, 111, 0.25);
+    color: #EF476F;
 }
 
 /* ==========================================================================
@@ -2002,59 +2061,10 @@ a:hover {
    ========================================================================== */
 
 #feedback-modal .modal-card {
-    background: rgba(24, 20, 10, 0.85) !important;
-    border: 1px solid rgba(245, 158, 11, 0.25) !important;
-    box-shadow: 0 20px 40px rgba(245, 158, 11, 0.15) !important;
+    background: #FCFBF7 !important;
+    border: 2px solid var(--warning) !important;
+    box-shadow: 0 16px 36px rgba(255, 209, 102, 0.25) !important;
 }
-
-/* ==========================================================================
-   LQDOJ BRIDGE AND RESULTS MODAL STYLING
-   ========================================================================== */
-
-#lqdoj-config-modal .modal-card,
-#lqdoj-submit-modal .modal-card,
-#lqdoj-result-modal .modal-card {
-    background: rgba(17, 24, 39, 0.9) !important;
-    border: 1px solid rgba(99, 102, 241, 0.3) !important;
-    box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2) !important;
-}
-
-#lqdoj-problems-table th, 
-#lqdoj-problems-table td,
-#lqdoj-testcases-table th,
-#lqdoj-testcases-table td {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-#lqdoj-problems-table tbody tr:hover,
-#lqdoj-testcases-table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.04);
-}
-
-.spinner-small {
-    display: inline-block;
-    font-size: 1.1rem;
-}
-
-#lqdoj-submit-select:focus {
-    border-color: var(--primary) !important;
-}
-
-#lqdoj-testcases-table th {
-    font-weight: 600;
-    color: var(--color-text-muted);
-}
-
-#lqdoj-testcases-table td {
-    padding: 8px 10px;
-}
-
-/* CSS cho kết quả nộp bài của HS trên card GV */
-.card-lqdoj-history {
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255,255,255,0.05);
-}
-
 
 
 

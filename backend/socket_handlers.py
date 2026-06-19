@@ -1,5 +1,4 @@
 import re
-import time
 from flask import request
 from flask_socketio import emit, join_room, leave_room
 from backend.database import db
@@ -16,7 +15,6 @@ sid_to_ip = {}
 
 # Biến toàn cục lưu trữ socketio phục vụ emit ngoài các socket handler
 socketio_instance = None
-lqdoj_bridge_sid = None
 
 def get_client_ip():
     """Lấy địa chỉ IP chính xác của client kết nối tới Socket.IO."""
@@ -69,22 +67,15 @@ def register_socket_handlers(socketio):
                 'code_template': db.code_template,
                 'template_stdin': db.template_stdin,
                 'template_console': db.template_console,
-                'feedback': student.get('feedback', ''),
-                'lqdoj_problems': db.get_lqdoj_problems()
+                'feedback': student.get('feedback', '')
             })
             # Gửi thêm thông tin các bài đang được chia sẻ cho máy con vừa kết nối
             emit('shared_codes_update', {'shared_students': db.get_shared_students()})
 
     @socketio.on('disconnect')
     def handle_disconnect():
-        global lqdoj_bridge_sid
         sid = request.sid
         ip = sid_to_ip.pop(sid, None)
-        
-        if sid == lqdoj_bridge_sid:
-            lqdoj_bridge_sid = None
-            db.lqdoj_bridge_connected = False
-            emit('lqdoj_bridge_status', {'connected': False}, room='teachers')
         
         if ip and ip in ip_to_sids:
             ip_to_sids[ip].discard(sid)
@@ -111,9 +102,7 @@ def register_socket_handlers(socketio):
             'template_stdin': db.template_stdin,
             'template_console': db.template_console,
             'shared_ips': list(db.shared_ips),
-            'assignment': db.get_assignment(),
-            'lqdoj_problems': db.get_lqdoj_problems(),
-            'lqdoj_bridge_connected': db.lqdoj_bridge_connected
+            'assignment': db.get_assignment()
         })
 
     @socketio.on('student_login')
@@ -139,8 +128,6 @@ def register_socket_handlers(socketio):
         emit('login_success', student)
         # Gửi thêm đề bài hiện tại (nếu có)
         emit('assignment_updated', db.get_assignment())
-        # Gửi danh sách bài tập LQDOJ
-        emit('lqdoj_problems_sync', {'problems': db.get_lqdoj_problems()})
         # Gửi trạng thái chia sẻ bài mẫu hiện tại của GV
         emit('teacher_share_template_state', {
             'share': db.is_sharing_template,
@@ -513,154 +500,6 @@ def register_socket_handlers(socketio):
             emit('teacher_feedback', {'feedback': feedback}, room=f"student_{target_ip}")
             # Đồng bộ nhận xét tới toàn bộ các giáo viên khác (nếu có)
             emit('student_feedback_sync', {'ip': target_ip, 'feedback': feedback}, room='teachers')
-
-    # --------------------------------------------------------------------------
-    # CẦU NỐI LQDOJ (LQDOJ BRIDGE HANDLERS)
-    # --------------------------------------------------------------------------
-    @socketio.on('register_lqdoj_bridge')
-    def handle_register_lqdoj_bridge():
-        """Đoạn script Tampermonkey đăng ký làm cầu nối chấm bài LQDOJ."""
-        global lqdoj_bridge_sid
-        lqdoj_bridge_sid = request.sid
-        db.lqdoj_bridge_connected = True
-        # Báo cho toàn bộ giáo viên biết cầu nối đã online
-        emit('lqdoj_bridge_status', {'connected': True}, room='teachers')
-        # Đồng bộ danh sách bài tập cho cầu nối
-        emit('lqdoj_problems_sync', {'problems': db.get_lqdoj_problems()})
-
-    @socketio.on('teacher_add_lqdoj_problem')
-    def handle_teacher_add_lqdoj_problem(data):
-        """Giáo viên thêm/sửa một bài tập liên kết LQDOJ."""
-        problem_id = data.get('id', '').strip()
-        name = data.get('name', '').strip()
-        submit_url = data.get('submit_url', '').strip()
-        
-        if problem_id and name and submit_url:
-            problems = db.add_lqdoj_problem(problem_id, name, submit_url)
-            # Đồng bộ tới tất cả mọi người (GV, HS, Cầu nối)
-            emit('lqdoj_problems_sync', {'problems': problems}, broadcast=True)
-
-    @socketio.on('teacher_delete_lqdoj_problem')
-    def handle_teacher_delete_lqdoj_problem(data):
-        """Giáo viên xóa một bài tập liên kết LQDOJ."""
-        problem_id = data.get('id', '').strip()
-        if problem_id:
-            problems = db.delete_lqdoj_problem(problem_id)
-            emit('lqdoj_problems_sync', {'problems': problems}, broadcast=True)
-
-    @socketio.on('student_lqdoj_submit')
-    def handle_student_lqdoj_submit(data):
-        """Học sinh nhấn nút Nộp bài LQDOJ."""
-        global lqdoj_bridge_sid
-        ip = get_client_ip()
-        problem_id = data.get('problem_id')
-        active_tab_id = data.get('tab_id', 'tab_default')
-        
-        if db.is_frozen:
-            emit('lqdoj_submit_status', {
-                'success': False,
-                'status': 'error',
-                'message': 'Thao tác bị chặn: Màn hình của bạn đang bị khóa bởi Giáo viên.'
-            })
-            return
-            
-        student = db.get_student_by_ip(ip)
-        if not student:
-            return
-            
-        # Tìm mã nguồn
-        code = student['code']
-        for t in student.get('tabs', []):
-            if t['id'] == active_tab_id:
-                code = t['code']
-                break
-                
-        # Tìm bài tập cấu hình tương ứng
-        problem = None
-        for p in db.get_lqdoj_problems():
-            if p['id'] == problem_id:
-                problem = p
-                break
-                
-        if not problem:
-            emit('lqdoj_submit_status', {
-                'success': False,
-                'status': 'error',
-                'message': 'Bài tập không tồn tại hoặc đã bị xóa.'
-            })
-            return
-            
-        # Kiểm tra cầu nối hoạt động
-        if not db.lqdoj_bridge_connected or not lqdoj_bridge_sid:
-            emit('lqdoj_submit_status', {
-                'success': False,
-                'status': 'error',
-                'message': 'Cầu nối LQDOJ ngoại tuyến. Hãy yêu cầu Giáo viên kích hoạt cầu nối.'
-            })
-            return
-            
-        submission_id = f"{ip}_{int(time.time()*1000)}"
-        
-        # Gửi lệnh nộp bài tới trình duyệt giáo viên (qua Tampermonkey)
-        emit('lqdoj_submit_request', {
-            'submission_id': submission_id,
-            'student_ip': ip,
-            'student_name': student['name'],
-            'problem_id': problem_id,
-            'problem_name': problem['name'],
-            'submit_url': problem['submit_url'],
-            'code': code
-        }, room=lqdoj_bridge_sid)
-        
-        # Phản hồi lại học sinh trạng thái khởi tạo
-        emit('lqdoj_submit_status', {
-            'submission_id': submission_id,
-            'status': 'submitting',
-            'message': 'Đang gửi yêu cầu nộp bài tới trình duyệt giáo viên...'
-        })
-
-    @socketio.on('lqdoj_submit_status_update')
-    def handle_lqdoj_submit_status_update(data):
-        """Cầu nối cập nhật tiến trình gửi và chấm bài."""
-        submission_id = data.get('submission_id')
-        student_ip = data.get('student_ip')
-        status = data.get('status')
-        message = data.get('message')
-        
-        emit('lqdoj_submit_status', {
-            'submission_id': submission_id,
-            'status': status,
-            'message': message
-        }, room=f"student_{student_ip}")
-
-    @socketio.on('lqdoj_submit_result_sync')
-    def handle_lqdoj_submit_result_sync(data):
-        """Cầu nối gửi kết quả chấm bài chi tiết hoàn tất."""
-        submission_id = data.get('submission_id')
-        student_ip = data.get('student_ip')
-        problem_id = data.get('problem_id')
-        problem_name = data.get('problem_name')
-        status = data.get('status')
-        score = data.get('score')
-        testcases = data.get('testcases', [])
-        
-        # Lưu kết quả vào cơ sở dữ liệu
-        db.add_lqdoj_submission(student_ip, problem_id, problem_name, status, score, testcases)
-        
-        # Trả kết quả chấm về cho học sinh
-        emit('lqdoj_submit_result', {
-            'submission_id': submission_id,
-            'problem_id': problem_id,
-            'problem_name': problem_name,
-            'status': status,
-            'score': score,
-            'testcases': testcases
-        }, room=f"student_{student_ip}")
-        
-        # Cập nhật thông tin học sinh trên máy giáo viên (để lưu giữ lịch sử)
-        student = db.get_student_by_ip(student_ip)
-        if student:
-            emit('student_update', {'ip': student_ip, 'student': student}, room='teachers')
 
 
 

@@ -103,12 +103,9 @@
                         <div class="editor-tabs-bar" id="editor-tabs-bar">
                             <!-- Các tab sẽ sinh động bằng JS -->
                         </div>
-                        <div class="editor-actions" style="display: flex; gap: 8px;">
+                        <div class="editor-actions">
                             <button class="btn btn-success btn-sm" id="btn-student-run" title="Chạy chương trình của bạn">
                                 <i class="fa-solid fa-play"></i> Tự Chạy Code
-                            </button>
-                            <button class="btn btn-warning btn-sm" id="btn-student-lqdoj-submit" title="Nộp bài và chấm điểm tự động qua hệ thống LQDOJ" style="display: none; align-items: center; gap: 4px;">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> Nộp bài LQDOJ
                             </button>
                         </div>
                     </div>
@@ -264,88 +261,6 @@
                 <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
                     <button class="btn btn-secondary" id="btn-custom-dialog-cancel" style="padding: 8px 16px; font-size: 0.9rem;">Hủy</button>
                     <button class="btn btn-primary" id="btn-custom-dialog-ok" style="padding: 8px 16px; font-size: 0.9rem;">Đồng ý</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Chọn bài để nộp lên LQDOJ -->
-    <div class="modal-overlay d-none" id="lqdoj-submit-modal" style="z-index: 99999;">
-        <div class="modal-card glass-panel" style="max-width: 400px; border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 0 30px rgba(99, 102, 241, 0.25);">
-            <div class="modal-header" style="padding-bottom: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px;">
-                <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--color-text-main); margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary);"></i> Nộp bài lên LQDOJ</h2>
-            </div>
-            <div class="modal-body" style="padding: 0;">
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label for="lqdoj-submit-select" style="font-size: 0.85rem; display: block; margin-bottom: 6px; font-weight: 600;">Chọn bài tập muốn nộp:</label>
-                    <select id="lqdoj-submit-select" style="width: 100%; padding: 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 6px; color: var(--color-text-main); outline: none; font-family: inherit; font-size: 0.95rem; cursor: pointer; transition: border-color 0.3s;">
-                        <!-- JS render danh sách các bài tập ở đây -->
-                    </select>
-                </div>
-                <p style="font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 20px;">
-                    * Lưu ý: Mã nguồn của tab hiện tại sẽ được gửi thông qua trình duyệt của Giáo viên để tiến hành chấm điểm tự động trên LQDOJ.
-                </p>
-                <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button class="btn btn-secondary" onclick="document.getElementById('lqdoj-submit-modal').classList.add('d-none')" style="padding: 8px 16px; font-size: 0.9rem;">Hủy</button>
-                    <button class="btn btn-primary" id="btn-confirm-lqdoj-submit" style="padding: 8px 16px; font-size: 0.9rem; font-weight: 700;">
-                        Gửi bài <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Trạng thái & Kết quả chấm bài LQDOJ -->
-    <div class="modal-overlay d-none" id="lqdoj-result-modal" style="z-index: 99999;">
-        <div class="modal-card glass-panel" style="max-width: 550px; width: 90%; border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 0 35px rgba(99, 102, 241, 0.25);">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px;">
-                <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--color-text-main); margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-square-poll-horizontal" style="color: var(--primary);"></i> Kết quả chấm LQDOJ</h2>
-                <button class="btn-close" id="btn-close-lqdoj-result" style="background: none; border: none; color: var(--color-text-muted); cursor: pointer; font-size: 1.2rem;"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="modal-body" style="padding: 0;">
-                <!-- Trạng thái tiến trình -->
-                <div id="lqdoj-progress-container" style="margin-bottom: 15px;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                        <div class="spinner-small" id="lqdoj-spinner"><i class="fa-solid fa-circle-notch fa-spin" style="color: var(--primary);"></i></div>
-                        <strong id="lqdoj-progress-title" style="font-size: 0.95rem; color: var(--color-text-main);">Đang gửi bài...</strong>
-                    </div>
-                    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
-                        <div id="lqdoj-progress-bar" style="width: 25%; height: 100%; background: var(--primary); transition: width 0.3s ease;"></div>
-                    </div>
-                    <p id="lqdoj-progress-log" style="font-size: 0.8rem; color: var(--color-text-muted); margin-top: 6px;"></p>
-                </div>
-
-                <!-- Báo cáo kết quả tổng quát -->
-                <div id="lqdoj-result-summary" style="display: none; padding: 12px; border-radius: 6px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); margin-bottom: 20px; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-size: 0.8rem; color: var(--color-text-muted); text-align: left;">Kết quả chung</div>
-                        <strong id="lqdoj-result-status" style="font-size: 1.1rem; color: var(--success);">Accepted</strong>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 0.8rem; color: var(--color-text-muted);">Tổng điểm số</div>
-                        <strong id="lqdoj-result-score" style="font-size: 1.4rem; color: var(--primary);">100/100</strong>
-                    </div>
-                </div>
-
-                <!-- Danh sách testcases chi tiết -->
-                <div id="lqdoj-testcases-container" style="display: none;">
-                    <h3 style="font-size: 0.95rem; margin-top: 0; margin-bottom: 8px; font-weight: 600; text-align: left;"><i class="fa-solid fa-list"></i> Chi tiết từng Testcase</h3>
-                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; background: rgba(0,0,0,0.2);">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;" id="lqdoj-testcases-table">
-                            <thead>
-                                <tr style="border-bottom: 1px solid var(--border-color); text-align: left; background: rgba(0,0,0,0.4);">
-                                    <th style="padding: 6px 10px;">Testcase</th>
-                                    <th style="padding: 6px 10px;">Trạng thái</th>
-                                    <th style="padding: 6px 10px;">Điểm số</th>
-                                    <th style="padding: 6px 10px;">Thời gian</th>
-                                    <th style="padding: 6px 10px;">Bộ nhớ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="lqdoj-testcases-tbody">
-                                <!-- Renders testcase detail rows dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
         </div>
