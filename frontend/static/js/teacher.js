@@ -22,6 +22,8 @@ let examModeGlobal = false;
 let viewedTabs = {}; // ip -> tab_id (Tab giáo viên đang xem của từng học sinh)
 let pinnedTabs = {}; // ip -> boolean (Có phải giáo viên đã pin tab thủ công)
 let currentAssignment = { type: "none", content: "", filename: "" };
+let lqdojProblems = [];
+let lqdojBridgeConnected = false;
 
 // Đợi DOM load xong
 document.addEventListener("DOMContentLoaded", () => {
@@ -113,6 +115,12 @@ function initSocketEvents() {
             if (teacherTemplateConsole) {
                 renderTemplateConsoleOutput(teacherTemplateConsole);
             }
+
+            // Đồng bộ trạng thái LQDOJ
+            lqdojProblems = data.lqdoj_problems || [];
+            lqdojBridgeConnected = data.lqdoj_bridge_connected || false;
+            updateLqdojBridgeUI();
+            renderLqdojProblemsTable();
         }
     });
 
@@ -403,6 +411,18 @@ function initSocketEvents() {
         renderTemplateConsoleOutput(data);
     });
 
+    // Đồng bộ danh sách bài tập LQDOJ
+    socket.on("lqdoj_problems_sync", (data) => {
+        lqdojProblems = data.problems || [];
+        renderLqdojProblemsTable();
+    });
+
+    // Đồng bộ trạng thái hoạt động của cầu nối
+    socket.on("lqdoj_bridge_status", (data) => {
+        lqdojBridgeConnected = data.connected;
+        updateLqdojBridgeUI();
+    });
+
     // Đồng bộ nhận xét tới toàn bộ các giáo viên khác (nếu có)
     socket.on("student_feedback_sync", (data) => {
         const ip = data.ip;
@@ -674,6 +694,51 @@ function initUIEvents() {
         });
     }
 
+    // --- SỰ KIỆN GIAO DIỆN CẦU NỐI LQDOJ ---
+    const btnToggleLqdoj = document.getElementById("btn-toggle-lqdoj-config");
+    const lqdojModal = document.getElementById("lqdoj-config-modal");
+    const btnCloseLqdoj = document.getElementById("btn-close-lqdoj-modal");
+
+    if (btnToggleLqdoj && lqdojModal) {
+        btnToggleLqdoj.addEventListener("click", () => {
+            lqdojModal.style.display = "flex";
+            updateLqdojBridgeUI();
+            renderLqdojProblemsTable();
+        });
+    }
+
+    if (btnCloseLqdoj && lqdojModal) {
+        btnCloseLqdoj.addEventListener("click", () => {
+            lqdojModal.style.display = "none";
+        });
+    }
+
+    // Đóng modal khi click ra ngoài vùng modal-card
+    if (lqdojModal) {
+        lqdojModal.addEventListener("click", (e) => {
+            if (e.target === lqdojModal) {
+                lqdojModal.style.display = "none";
+            }
+        });
+    }
+
+    const addProblemForm = document.getElementById("add-lqdoj-problem-form");
+    if (addProblemForm) {
+        addProblemForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const id = document.getElementById("lqdoj-prob-id").value.trim();
+            const name = document.getElementById("lqdoj-prob-name").value.trim();
+            const submitUrl = document.getElementById("lqdoj-prob-url").value.trim();
+            
+            if (id && name && submitUrl) {
+                socket.emit("teacher_add_lqdoj_problem", { id, name, submit_url: submitUrl });
+                // Reset form inputs
+                document.getElementById("lqdoj-prob-id").value = "";
+                document.getElementById("lqdoj-prob-name").value = "";
+                document.getElementById("lqdoj-prob-url").value = "";
+            }
+        });
+    }
 }
 
 /* ==========================================================================
@@ -825,6 +890,43 @@ function renderStudentSlot(ip, student) {
             }
         }
         
+        // Cập nhật kết quả nộp bài LQDOJ
+        const lqdojContainer = slotCard.querySelector(".card-lqdoj-history") || document.createElement("div");
+        if (!slotCard.querySelector(".card-lqdoj-history")) {
+            lqdojContainer.className = "card-lqdoj-history";
+            lqdojContainer.style.fontSize = "0.75rem";
+            lqdojContainer.style.color = "var(--color-text-muted)";
+            lqdojContainer.style.marginBottom = "5px";
+            lqdojContainer.style.padding = "2px 8px";
+            lqdojContainer.style.background = "rgba(0,0,0,0.15)";
+            lqdojContainer.style.borderRadius = "4px";
+            lqdojContainer.style.display = "none";
+            
+            const footer = slotCard.querySelector(".card-footer");
+            if (footer) {
+                const actions = footer.querySelector(".card-actions");
+                if (actions) {
+                    footer.insertBefore(lqdojContainer, actions);
+                }
+            }
+        }
+        
+        if (student.lqdoj_submissions && student.lqdoj_submissions.length > 0) {
+            const lastSub = student.lqdoj_submissions[student.lqdoj_submissions.length - 1];
+            let statusColor = "#ef4444"; // red
+            if (lastSub.status === "Accepted") statusColor = "#10b981"; // green
+            else if (lastSub.status.includes("Time")) statusColor = "#f59e0b"; // orange
+            
+            lqdojContainer.innerHTML = `
+                <i class="fa-solid fa-cloud-arrow-up"></i> LQDOJ: 
+                <strong>${lastSub.problem_name}</strong> - 
+                <span style="color: ${statusColor}; font-weight: bold;">${lastSub.score} (${lastSub.status})</span>
+            `;
+            lqdojContainer.style.display = "block";
+        } else {
+            lqdojContainer.style.display = "none";
+        }
+        
         return;
     }
 
@@ -867,6 +969,7 @@ function renderStudentSlot(ip, student) {
         </div>
         <div class="card-footer">
             <span class="card-ip" title="${ip}">IP: ${ip} | Ô ${slotId}</span>
+            <div class="card-lqdoj-history" style="font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 5px; padding: 2px 8px; background: rgba(0,0,0,0.15); border-radius: 4px; display: none;"></div>
             <div class="card-actions" style="display: flex; gap: 6px; flex-wrap: wrap; width: 100%; justify-content: flex-end; margin-top: 5px;">
                 <button class="btn btn-secondary btn-sm" id="btn-feedback-${safeIp}" style="padding: 4px 8px; font-size: 0.75rem;" onclick="openFeedbackModal('${ip}')" title="Gửi lời nhận xét/phản hồi tới học sinh">
                     <i class="fa-solid fa-comment-dots"></i> Nhận xét
@@ -919,6 +1022,26 @@ function renderStudentSlot(ip, student) {
     
     // Lưu tham chiếu editor
     studentEditors[ip] = cm;
+
+    // Hiển thị lịch sử LQDOJ nếu có sẵn
+    const lqdojContainer = slotCard.querySelector(".card-lqdoj-history");
+    if (lqdojContainer) {
+        if (student.lqdoj_submissions && student.lqdoj_submissions.length > 0) {
+            const lastSub = student.lqdoj_submissions[student.lqdoj_submissions.length - 1];
+            let statusColor = "#ef4444";
+            if (lastSub.status === "Accepted") statusColor = "#10b981";
+            else if (lastSub.status.includes("Time")) statusColor = "#f59e0b";
+            
+            lqdojContainer.innerHTML = `
+                <i class="fa-solid fa-cloud-arrow-up"></i> LQDOJ: 
+                <strong>${lastSub.problem_name}</strong> - 
+                <span style="color: ${statusColor}; font-weight: bold;">${lastSub.score} (${lastSub.status})</span>
+            `;
+            lqdojContainer.style.display = "block";
+        } else {
+            lqdojContainer.style.display = "none";
+        }
+    }
 
     // Đăng ký sự kiện thay đổi của CodeMirror học sinh để đồng bộ ngược về máy học sinh
     let syncTimeout;
@@ -1351,6 +1474,53 @@ window.openFeedbackModal = function(ip) {
         });
         student.feedback = trimmed;
         alert(`Đã gửi nhận xét thành công tới ${student.name}!`);
+    }
+};
+
+/* --- CẦU NỐI LQDOJ HELPERS --- */
+function updateLqdojBridgeUI() {
+    const dot = document.getElementById("lqdoj-status-dot");
+    const text = document.getElementById("lqdoj-bridge-status-text");
+    if (dot) {
+        dot.style.background = lqdojBridgeConnected ? "#10b981" : "#ef4444";
+        dot.title = lqdojBridgeConnected ? "Cầu nối đang trực tuyến" : "Cầu nối đang ngoại tuyến";
+    }
+    if (text) {
+        text.textContent = lqdojBridgeConnected ? "🟢 Đang hoạt động" : "🔴 Ngoại tuyến";
+        text.style.color = lqdojBridgeConnected ? "#10b981" : "#ef4444";
+    }
+}
+
+function renderLqdojProblemsTable() {
+    const tbody = document.getElementById("lqdoj-problems-tbody");
+    if (!tbody) return;
+    
+    if (lqdojProblems.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" style="padding: 10px; text-align: center; color: var(--color-text-muted);">Chưa cấu hình bài tập nào</td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = lqdojProblems.map(p => `
+        <tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding: 8px 10px; font-weight: 600;">${p.id}</td>
+            <td style="padding: 8px 10px;">${p.name}</td>
+            <td style="padding: 8px 10px; color: var(--color-text-muted); font-size: 0.75rem; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${p.submit_url}">${p.submit_url}</td>
+            <td style="padding: 8px 10px; text-align: center;">
+                <button class="btn btn-danger-outline btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" onclick="deleteLqdojProblem('${p.id}')">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+window.deleteLqdojProblem = function(id) {
+    if (confirm(`Bạn có chắc chắn muốn xóa bài tập liên kết này?`)) {
+        socket.emit("teacher_delete_lqdoj_problem", { id });
     }
 };
 

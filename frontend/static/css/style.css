@@ -2007,6 +2007,55 @@ a:hover {
     box-shadow: 0 20px 40px rgba(245, 158, 11, 0.15) !important;
 }
 
+/* ==========================================================================
+   LQDOJ BRIDGE AND RESULTS MODAL STYLING
+   ========================================================================== */
+
+#lqdoj-config-modal .modal-card,
+#lqdoj-submit-modal .modal-card,
+#lqdoj-result-modal .modal-card {
+    background: rgba(17, 24, 39, 0.9) !important;
+    border: 1px solid rgba(99, 102, 241, 0.3) !important;
+    box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2) !important;
+}
+
+#lqdoj-problems-table th, 
+#lqdoj-problems-table td,
+#lqdoj-testcases-table th,
+#lqdoj-testcases-table td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#lqdoj-problems-table tbody tr:hover,
+#lqdoj-testcases-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.spinner-small {
+    display: inline-block;
+    font-size: 1.1rem;
+}
+
+#lqdoj-submit-select:focus {
+    border-color: var(--primary) !important;
+}
+
+#lqdoj-testcases-table th {
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
+#lqdoj-testcases-table td {
+    padding: 8px 10px;
+}
+
+/* CSS cho kết quả nộp bài của HS trên card GV */
+.card-lqdoj-history {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+
 
 
 

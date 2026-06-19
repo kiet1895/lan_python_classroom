@@ -21,6 +21,7 @@ let teacherTemplateCode = "";
 let teacherTemplateStdin = "";
 let teacherTemplateConsole = null;
 let currentAssignment = { type: "none", content: "", filename: "" };
+let lqdojProblems = [];
 
 let currentSharedStudents = {}; // Cache danh sách bạn học đang được chia sẻ
 let sharedStudentEditors = {}; // ip -> cm_instance (Phạm vi toàn cục)
@@ -158,6 +159,10 @@ function initSocketEvents() {
         if (stdinInput) {
             stdinInput.value = data.stdin || "";
         }
+        
+        // Đồng bộ danh sách bài tập LQDOJ
+        lqdojProblems = data.lqdoj_problems || [];
+        syncLqdojProblems();
         
         // Khôi phục phản hồi nhận xét của giáo viên
         if (data.feedback) {
@@ -425,6 +430,23 @@ function initSocketEvents() {
             showToastNotification("Nhận xét từ Giáo viên", feedback);
         }
     });
+
+    // Đồng bộ danh sách bài tập LQDOJ
+    socket.on("lqdoj_problems_sync", (data) => {
+        lqdojProblems = data.problems || [];
+        syncLqdojProblems();
+    });
+
+    // Cập nhật tiến trình nộp bài LQDOJ
+    socket.on("lqdoj_submit_status", (data) => {
+        const { status, message } = data;
+        showLqdojProgress(status, message);
+    });
+
+    // Nhận kết quả chấm bài chi tiết từ LQDOJ
+    socket.on("lqdoj_submit_result", (data) => {
+        showLqdojResult(data);
+    });
 }
 
 /* ==========================================================================
@@ -625,6 +647,69 @@ function initUIEvents() {
     if (tabBtnTemplate) {
         tabBtnTemplate.addEventListener("click", () => {
             switchRightPaneTab("template");
+        });
+    }
+
+    // --- SỰ KIỆN GIAO DIỆN CẦU NỐI LQDOJ ---
+    const btnStudentLqdoj = document.getElementById("btn-student-lqdoj-submit");
+    const lqdojSubmitModal = document.getElementById("lqdoj-submit-modal");
+    if (btnStudentLqdoj && lqdojSubmitModal) {
+        btnStudentLqdoj.addEventListener("click", () => {
+            if (lqdojProblems.length === 0) {
+                alert("Không có bài tập LQDOJ nào được cấu hình từ giáo viên.");
+                return;
+            }
+            lqdojSubmitModal.classList.remove("d-none");
+        });
+    }
+
+    const btnConfirmLqdoj = document.getElementById("btn-confirm-lqdoj-submit");
+    if (btnConfirmLqdoj) {
+        btnConfirmLqdoj.addEventListener("click", () => {
+            const selectElt = document.getElementById("lqdoj-submit-select");
+            const selectedProblemId = selectElt.value;
+            if (!selectedProblemId) {
+                alert("Vui lòng chọn bài tập muốn nộp.");
+                return;
+            }
+            
+            // Đóng modal chọn bài
+            if (lqdojSubmitModal) lqdojSubmitModal.classList.add("d-none");
+            
+            // Reset modal kết quả trước khi mở
+            const progressContainer = document.getElementById("lqdoj-progress-container");
+            const summary = document.getElementById("lqdoj-result-summary");
+            const testcasesContainer = document.getElementById("lqdoj-testcases-container");
+            if (progressContainer) progressContainer.style.display = "block";
+            if (summary) summary.style.display = "none";
+            if (testcasesContainer) testcasesContainer.style.display = "none";
+            
+            // Mở modal kết quả
+            const lqdojResultModal = document.getElementById("lqdoj-result-modal");
+            if (lqdojResultModal) lqdojResultModal.classList.remove("d-none");
+            
+            // Emit nộp bài
+            socket.emit("student_lqdoj_submit", {
+                problem_id: selectedProblemId,
+                tab_id: activeTabId
+            });
+        });
+    }
+
+    const btnCloseLqdojResult = document.getElementById("btn-close-lqdoj-result");
+    const lqdojResultModal = document.getElementById("lqdoj-result-modal");
+    if (btnCloseLqdojResult && lqdojResultModal) {
+        btnCloseLqdojResult.addEventListener("click", () => {
+            lqdojResultModal.classList.add("d-none");
+        });
+    }
+
+    // Đóng modal kết quả khi click ra ngoài
+    if (lqdojResultModal) {
+        lqdojResultModal.addEventListener("click", (e) => {
+            if (e.target === lqdojResultModal) {
+                lqdojResultModal.classList.add("d-none");
+            }
         });
     }
 }
@@ -1363,5 +1448,109 @@ function escapeHtml(text) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+}
+
+/* --- ĐỒNG BỘ BÀI TẬP & KẾT QUẢ CHẤM LQDOJ --- */
+function syncLqdojProblems() {
+    const btnSubmit = document.getElementById("btn-student-lqdoj-submit");
+    const selectBox = document.getElementById("lqdoj-submit-select");
+    
+    if (!btnSubmit || !selectBox) return;
+    
+    if (lqdojProblems && lqdojProblems.length > 0) {
+        btnSubmit.style.display = "inline-flex";
+        selectBox.innerHTML = lqdojProblems.map(p => `<option value="${p.id}">${escapeHtml(p.name)} (${p.id})</option>`).join("");
+    } else {
+        btnSubmit.style.display = "none";
+        selectBox.innerHTML = '<option value="">(Không có bài tập cấu hình)</option>';
+    }
+}
+
+function showLqdojProgress(status, message) {
+    const progressContainer = document.getElementById("lqdoj-progress-container");
+    const progressTitle = document.getElementById("lqdoj-progress-title");
+    const progressBar = document.getElementById("lqdoj-progress-bar");
+    const progressLog = document.getElementById("lqdoj-progress-log");
+    const spinner = document.getElementById("lqdoj-spinner");
+    
+    if (!progressContainer) return;
+    
+    progressContainer.style.display = "block";
+    if (progressLog) progressLog.textContent = message;
+    
+    if (status === "submitting") {
+        if (progressTitle) progressTitle.textContent = "Đang gửi bài...";
+        if (progressBar) {
+            progressBar.style.width = "40%";
+            progressBar.style.background = "var(--primary)";
+        }
+        if (spinner) spinner.style.display = "block";
+    } else if (status === "judging") {
+        if (progressTitle) progressTitle.textContent = "Hệ thống đang chấm bài...";
+        if (progressBar) {
+            progressBar.style.width = "75%";
+            progressBar.style.background = "var(--primary)";
+        }
+        if (spinner) spinner.style.display = "block";
+    } else if (status === "error") {
+        if (progressTitle) progressTitle.textContent = "Nộp bài thất bại!";
+        if (progressBar) {
+            progressBar.style.width = "100%";
+            progressBar.style.background = "#ef4444"; // red
+        }
+        if (spinner) spinner.style.display = "none";
+    }
+}
+
+function showLqdojResult(data) {
+    const progressContainer = document.getElementById("lqdoj-progress-container");
+    const summary = document.getElementById("lqdoj-result-summary");
+    const statusElt = document.getElementById("lqdoj-result-status");
+    const scoreElt = document.getElementById("lqdoj-result-score");
+    const testcasesContainer = document.getElementById("lqdoj-testcases-container");
+    const tbody = document.getElementById("lqdoj-testcases-tbody");
+    
+    if (progressContainer) progressContainer.style.display = "none";
+    if (summary) summary.style.display = "flex";
+    
+    if (statusElt) {
+        statusElt.textContent = data.status;
+        let color = "#ef4444"; // red
+        if (data.status === "Accepted") color = "#10b981"; // green
+        else if (data.status.includes("Time")) color = "#f59e0b"; // orange/yellow
+        statusElt.style.color = color;
+    }
+    
+    if (scoreElt) {
+        scoreElt.textContent = data.score;
+    }
+    
+    if (testcasesContainer) testcasesContainer.style.display = "block";
+    
+    if (tbody) {
+        if (!data.testcases || data.testcases.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="padding: 10px; text-align: center; color: var(--color-text-muted);">Không trích xuất được chi tiết testcase.</td>
+                </tr>
+            `;
+        } else {
+            tbody.innerHTML = data.testcases.map(tc => {
+                let statusColor = "#ef4444";
+                if (tc.status === "Accepted") statusColor = "#10b981";
+                else if (tc.status.includes("Time")) statusColor = "#f59e0b";
+                
+                return `
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 8px 10px; font-weight: 600; text-align: left;">${escapeHtml(tc.id)}</td>
+                        <td style="padding: 8px 10px; color: ${statusColor}; font-weight: bold; text-align: left;">${escapeHtml(tc.status)}</td>
+                        <td style="padding: 8px 10px; text-align: left;">${escapeHtml(tc.score || "---")}</td>
+                        <td style="padding: 8px 10px; text-align: left;">${escapeHtml(tc.time)}</td>
+                        <td style="padding: 8px 10px; text-align: left;">${escapeHtml(tc.memory)}</td>
+                    </tr>
+                `;
+            }).join("");
+        }
+    }
 }
 

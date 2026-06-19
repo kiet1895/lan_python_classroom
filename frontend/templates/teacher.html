@@ -59,8 +59,12 @@
             <button class="btn btn-secondary" id="btn-toggle-exam" title="Ẩn code học sinh trên máy chiếu" style="flex: 1; max-width: 200px; justify-content: center;">
                 <i class="fa-solid fa-eye-slash"></i> <span>Chế độ kiểm tra</span>
             </button>
-            
 
+            <!-- Nút Cấu hình bài tập LQDOJ -->
+            <button class="btn btn-indigo" id="btn-toggle-lqdoj-config" title="Cấu hình nộp bài và chấm tự động qua LQDOJ" style="flex: 1; max-width: 200px; justify-content: center; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> <span>Cầu nối LQDOJ</span>
+                <span id="lqdoj-status-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ef4444;" title="Cầu nối đang ngoại tuyến"></span>
+            </button>
             
             <!-- Nút xuất báo cáo thu bài -->
             <a href="{{ url_for('export_code') }}" class="btn btn-success" id="btn-export" title="Tải xuống code của toàn bộ học sinh" style="flex: 1; max-width: 200px; justify-content: center; display: inline-flex; align-items: center;">
@@ -203,6 +207,74 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cấu hình bài tập LQDOJ (LQDOJ Config Modal) -->
+<div class="modal-overlay" id="lqdoj-config-modal" style="display: none;">
+    <div class="modal-card glass-panel" style="max-width: 600px; width: 90%;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
+            <h2 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-cloud-arrow-up"></i> Cấu hình nộp bài LQDOJ</h2>
+            <button class="btn-close" id="btn-close-lqdoj-modal" style="background: none; border: none; color: var(--color-text-muted); cursor: pointer; font-size: 1.2rem;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <!-- Trạng thái kết nối cầu nối -->
+            <div class="bridge-status-section" style="padding: 10px; border-radius: 6px; background: rgba(0, 0, 0, 0.2); margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <span style="font-weight: 600; font-size: 0.9rem;">Trạng thái cầu nối:</span>
+                    <span id="lqdoj-bridge-status-text" style="color: #ef4444; font-weight: bold; margin-left: 6px; font-size: 0.9rem;">🔴 Ngoại tuyến</span>
+                </div>
+                <a href="/static/js/lqdoj_bridge.user.js" download="lqdoj_bridge.user.js" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 4px 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-download"></i> Tải Userscript
+                </a>
+            </div>
+            
+            <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-top: -8px; margin-bottom: 15px; line-height: 1.4;">
+                * Hướng dẫn: Tải Userscript trên, cài đặt vào tiện ích **Tampermonkey** của Chrome, sau đó mở sẵn tab **lqdoj.edu.vn** (và đăng nhập tài khoản của bạn). Trình duyệt sẽ tự động làm cầu nối chấm bài.
+            </p>
+
+            <!-- Form thêm bài mới -->
+            <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; color: var(--primary);"><i class="fa-solid fa-circle-plus"></i> Thêm bài tập liên kết</h3>
+            <form id="add-lqdoj-problem-form" onsubmit="event.preventDefault();" style="margin-bottom: 15px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                    <div style="flex: 1; min-width: 110px;">
+                        <label for="lqdoj-prob-id" style="font-size: 0.75rem; display: block; margin-bottom: 4px; font-weight: 600;">Mã/ID bài (LQDOJ):</label>
+                        <input type="text" id="lqdoj-prob-id" placeholder="VD: tkcb14" required style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 6px; color: var(--color-text-main); padding: 8px; font-size: 0.85rem; outline: none;">
+                    </div>
+                    <div style="flex: 2; min-width: 170px;">
+                        <label for="lqdoj-prob-name" style="font-size: 0.75rem; display: block; margin-bottom: 4px; font-weight: 600;">Tên hiển thị bài tập:</label>
+                        <input type="text" id="lqdoj-prob-name" placeholder="VD: Tính số bàn học" required style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 6px; color: var(--color-text-main); padding: 8px; font-size: 0.85rem; outline: none;">
+                    </div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label for="lqdoj-prob-url" style="font-size: 0.75rem; display: block; margin-bottom: 4px; font-weight: 600;">Link nộp bài (Submit URL):</label>
+                    <input type="url" id="lqdoj-prob-url" placeholder="https://lqdoj.edu.vn/problem/tkcb14/submit" required style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 6px; color: var(--color-text-main); padding: 8px; font-size: 0.85rem; outline: none;">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm" style="width: 100%; justify-content: center; font-size: 0.8rem; padding: 6px;">
+                    <i class="fa-solid fa-plus"></i> Thêm bài tập
+                </button>
+            </form>
+
+            <!-- Danh sách bài tập đã thêm -->
+            <h3 style="margin-bottom: 8px; font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; color: var(--primary);"><i class="fa-solid fa-list-check"></i> Danh sách bài tập nộp</h3>
+            <div style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; background: rgba(0,0,0,0.2);">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;" id="lqdoj-problems-table">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); text-align: left; background: rgba(0,0,0,0.4);">
+                            <th style="padding: 6px 10px;">Mã</th>
+                            <th style="padding: 6px 10px;">Tên bài tập</th>
+                            <th style="padding: 6px 10px;">Link nộp</th>
+                            <th style="padding: 6px 10px; text-align: center; width: 60px;">Xóa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lqdoj-problems-tbody">
+                        <tr>
+                            <td colspan="4" style="padding: 10px; text-align: center; color: var(--color-text-muted);">Chưa cấu hình bài tập nào</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
