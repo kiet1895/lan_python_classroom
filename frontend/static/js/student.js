@@ -1089,6 +1089,19 @@ function renderAssignment(assignment) {
             img.onclick = () => window.open(currentAssignment.file_url, "_blank");
             attachContainer.appendChild(img);
         } else if (currentAssignment.file_type === "pdf") {
+            // Thêm nút mở trực tiếp cho iPad/thiết bị di động để xem được nhiều trang
+            const openLink = document.createElement("a");
+            openLink.href = currentAssignment.file_url;
+            openLink.target = "_blank";
+            openLink.className = "btn btn-warning";
+            openLink.style.marginBottom = "12px";
+            openLink.style.display = "inline-flex";
+            openLink.style.alignItems = "center";
+            openLink.style.gap = "6px";
+            openLink.style.width = "auto";
+            openLink.innerHTML = `<i class="fa-solid fa-up-right-from-square"></i> Mở tệp PDF trong cửa sổ mới (Học sinh dùng iPad/máy tính bảng bấm vào đây để xem đủ các trang)`;
+            attachContainer.appendChild(openLink);
+
             const iframe = document.createElement("iframe");
             iframe.className = "assignment-pdf-view";
             iframe.src = currentAssignment.file_url;

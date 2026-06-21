@@ -305,6 +305,40 @@
                     img.onclick = () => window.open(assignment.file_url, "_blank");
                     attachContainer.appendChild(img);
                 } else if (assignment.file_type === "pdf") {
+                    // Thêm nút mở trực tiếp cho iPad/thiết bị di động để xem được nhiều trang
+                    const openLink = document.createElement("a");
+                    openLink.href = assignment.file_url;
+                    openLink.target = "_blank";
+                    openLink.className = "btn btn-warning";
+                    openLink.style.marginBottom = "12px";
+                    openLink.style.display = "inline-flex";
+                    openLink.style.alignItems = "center";
+                    openLink.style.gap = "6px";
+                    openLink.style.width = "auto";
+                    openLink.style.textDecoration = "none";
+                    openLink.style.color = "#073B4C";
+                    openLink.style.fontWeight = "600";
+                    openLink.style.padding = "10px 20px";
+                    openLink.style.borderRadius = "8px";
+                    openLink.style.background = "linear-gradient(135deg, var(--warning), #f5b041)";
+                    openLink.style.boxShadow = "0 4px 12px rgba(255, 209, 102, 0.25)";
+                    openLink.style.fontFamily = "var(--font-ui)";
+                    openLink.style.fontSize = "0.9rem";
+                    openLink.style.transition = "all 0.2s ease";
+                    
+                    // Thêm hiệu ứng hover đơn giản
+                    openLink.onmouseover = () => {
+                        openLink.style.transform = "translateY(-1px)";
+                        openLink.style.boxShadow = "0 6px 16px rgba(255, 209, 102, 0.35)";
+                    };
+                    openLink.onmouseout = () => {
+                        openLink.style.transform = "translateY(0)";
+                        openLink.style.boxShadow = "0 4px 12px rgba(255, 209, 102, 0.25)";
+                    };
+                    
+                    openLink.innerHTML = `<i class="fa-solid fa-up-right-from-square"></i> Mở tệp PDF trong cửa sổ mới (Học sinh dùng iPad/máy tính bảng bấm vào đây để xem đủ các trang)`;
+                    attachContainer.appendChild(openLink);
+
                     const iframe = document.createElement("iframe");
                     iframe.className = "assignment-pdf-view";
                     iframe.src = assignment.file_url;
